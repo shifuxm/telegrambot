@@ -1,0 +1,32 @@
+/* ── TEACHER CSS ─────────────────────────────────────────── */
+
+/* Score input */
+.score-inp {
+  width: 100%; padding: 18px; border: 2px solid var(--bdr);
+  border-radius: 16px; font-size: 40px; font-weight: 900;
+  text-align: center; outline: none; font-family: 'Nunito', sans-serif;
+  color: var(--p); transition: .15s;
+}
+.score-inp:focus { border-color: var(--p); }
+
+/* Reyting rank */
+.rank-badge {
+  width: 32px; height: 32px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; flex-shrink: 0;
+}
+
+/* Group pill for month selector */
+.mp-wrap { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+.mpb { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--bdr); font-size: 13px; font-weight: 700; cursor: pointer; background: #fff; color: var(--tx2); font-family: 'Nunito', sans-serif; transition: .15s; white-space: nowrap; }
+.mpb.on { background: var(--p); color: #fff; border-color: var(--p); }
+
+/* Attendance warning banner */
+.att-warn {
+  background: var(--ws); border: 1.5px solid var(--w); border-radius: 12px;
+  padding: 12px; margin-bottom: 12px; font-size: 13px; color: #92400e;
+  display: flex; align-items: center; gap: 8px;
+}
+.att-ok {
+  background: var(--oks); border-color: var(--ok); color: #065f46;
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Qabulxona — Ta'lim Plus</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="/css/shared.css"/>
+<link rel="stylesheet" href="/css/reception.css"/>
+</head>
+<body>
+<div id="toast"></div>
+
+<div id="loading">
+  <div class="ld-ico">📋</div>
+  <div class="spinner"></div>
+  <div class="ld-txt">Qabulxona yuklanmoqda...</div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="sb-ov" id="sbOv" onclick="sbClose()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sb-profile">
+      <div class="sb-avatar" id="sbAvatar">Q</div>
+      <div class="sb-name" id="sbName">Qabulxona</div>
+      <div class="sb-role">Qabulxona xodimi</div>
+    </div>
+    <nav class="sb-nav" id="sbNav"></nav>
+    <div class="sb-footer">Ta'lim Plus CRM · 2026</div>
+  </div>
+
+  <div class="topbar">
+    <button class="menu-btn" onclick="sbOpen()"><i class="fa-solid fa-bars"></i></button>
+    <div class="pg-title" id="pgTitle">Qabul ro'yxati</div>
+  </div>
+
+  <div id="content" class="pv-nobot"></div>
+</div>
+
+<div id="modals"></div>
+<script src="/js/shared.js"></script>
+<script src="/js/reception.js"></script>
+</body>
+</html>

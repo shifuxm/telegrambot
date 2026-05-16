@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Profil — Ta'lim Plus</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="/css/shared.css"/>
+<link rel="stylesheet" href="/css/student.css"/>
+</head>
+<body>
+<div id="toast"></div>
+
+<div id="loading">
+  <div class="ld-ico">🎓</div>
+  <div class="spinner"></div>
+  <div class="ld-txt">Profil yuklanmoqda...</div>
+</div>
+
+<div id="app" style="display:none"></div>
+
+<!-- BOTTOM NAV (static, tab images) -->
+<nav class="botnav" id="botnav" style="display:none">
+  <button class="btab on" id="tab_home" onclick="setTab('home')">
+    <div class="btab-icon"><img src="/assets/student/home.png" class="tab-img" alt="Asosiy"/></div>
+    <span>Asosiy</span>
+  </button>
+  <button class="btab" id="tab_sched" onclick="setTab('sched')">
+    <div class="btab-icon"><img src="/assets/student/schedule.png" class="tab-img" alt="Jadval"/></div>
+    <span>Jadval</span>
+  </button>
+  <button class="btab" id="tab_rate" onclick="setTab('rate')">
+    <div class="btab-icon"><img src="/assets/student/trophy.png" class="tab-img" alt="Reyting"/></div>
+    <span>Reyting</span>
+  </button>
+  <button class="btab" id="tab_att" onclick="setTab('att')">
+    <div class="btab-icon"><img src="/assets/student/attendance.png" class="tab-img" alt="Davomat"/></div>
+    <span>Davomat</span>
+  </button>
+  <button class="btab" id="tab_pay" onclick="setTab('pay')">
+    <div class="btab-icon"><img src="/assets/student/card.png" class="tab-img" alt="To'lov"/></div>
+    <span>To'lov</span>
+  </button>
+</nav>
+
+<div id="modals"></div>
+<script src="/js/shared.js"></script>
+<script src="/js/student.js"></script>
+</body>
+</html>

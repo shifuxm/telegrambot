@@ -1,0 +1,93 @@
+/* ── STUDENT PROFILE CSS ─────────────────────────────────── */
+
+.hero-student {
+  background: linear-gradient(160deg, var(--pd) 0%, var(--p) 55%, #5B7FFF 100%);
+  padding: 24px 20px 36px; position: relative; overflow: hidden;
+}
+.hero-student::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: rgba(255,255,255,.08);
+}
+.hero-student::after {
+  content: ''; position: absolute; bottom: -30px; left: -20px;
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(255,255,255,.06);
+}
+
+.student-avatar {
+  width: 72px; height: 72px; border-radius: 22px;
+  background: rgba(255,255,255,.2); border: 3px solid rgba(255,255,255,.35);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: #fff; flex-shrink: 0;
+}
+
+.switcher {
+  display: flex; gap: 8px; overflow-x: auto;
+  scrollbar-width: none; margin-bottom: 18px;
+}
+.sw-btn {
+  flex-shrink: 0; padding: 8px 18px; border-radius: 22px;
+  border: 2px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.12); color: rgba(255,255,255,.7);
+  font-size: 13px; font-weight: 800; cursor: pointer;
+  font-family: 'Nunito', sans-serif; transition: .15s;
+}
+.sw-btn.on { background: #fff; color: var(--p); border-color: #fff; }
+
+/* ── MINI STATS (top cards over hero) ─── */
+.mini-stats-student {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 10px; margin-top: -28px;
+  position: relative; z-index: 10;
+  padding: 0 16px; margin-bottom: 16px;
+}
+.mst {
+  background: #fff; border-radius: 18px;
+  border: 1.5px solid var(--bdr); padding: 14px 10px;
+  text-align: center; box-shadow: 0 4px 16px rgba(59,91,255,.12);
+}
+
+/* ── RATING HERO ─────────────────────────────────────────── */
+.rating-hero {
+  background: linear-gradient(135deg, var(--pd), var(--p));
+  border-radius: 22px; padding: 20px; color: #fff;
+  margin-bottom: 16px; position: relative; overflow: hidden;
+}
+.rating-hero::before {
+  content: ''; position: absolute; top: -20px; right: -20px;
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(255,255,255,.1);
+}
+
+/* ── DAVOMAT CALENDAR ────────────────────────────────────── */
+.att-dot {
+  width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+}
+.att-present { background: var(--ok); }
+.att-absent  { background: var(--r);  }
+.att-none    { background: var(--bdr); }
+
+/* ── PAYMENT ROW ──────────────────────────────────────────── */
+.pay-row {
+  display: flex; align-items: center; padding: 13px 16px;
+  border-bottom: 1.5px solid var(--bdr2);
+}
+.pay-row:last-child { border-bottom: none; }
+.pay-plus  { color: var(--ok); }
+.pay-minus { color: var(--r);  }
+
+/* ── WEEK SCHEDULE ───────────────────────────────────────── */
+.week-card { display: flex; gap: 12px; margin-bottom: 12px; }
+.day-badge {
+  width: 46px; height: 54px; border-radius: 14px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; border: 2px solid var(--bdr); background: #fff;
+}
+.day-badge.today   { background: var(--p); border-color: var(--p); }
+.day-badge.has-les { background: var(--ps); border-color: var(--p); }
+.day-badge .dn { font-size: 10px; font-weight: 800; }
+.day-badge .dd { font-size: 18px; font-weight: 900; }
+.day-badge.today .dn, .day-badge.today .dd { color: #fff; }
+.day-badge.has-les .dn, .day-badge.has-les .dd { color: var(--p); }
+.day-badge .dn, .day-badge .dd { color: var(--tx3); }

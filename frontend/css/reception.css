@@ -1,0 +1,37 @@
+/* ── RECEPTION CSS ───────────────────────────────────────── */
+
+/* Group pills for enrollment picker */
+.gpill {
+  padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--bdr);
+  background: #fff; color: var(--tx2); font-size: 13px; cursor: pointer;
+  white-space: nowrap; font-family: 'Nunito', sans-serif; transition: .15s;
+}
+.gpill.on { background: var(--p); color: #fff; border-color: var(--p); }
+
+/* Checkbox row */
+.chkr { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1.5px solid var(--bdr2); cursor: pointer; }
+.chkr:last-child { border-bottom: none; }
+.chk  { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--bdr); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; font-weight: 800; transition: .15s; }
+.chk.on { background: var(--p); border-color: var(--p); color: #fff; }
+
+/* Step indicator */
+.step-dot {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff; background: var(--p);
+}
+
+/* Payment group button */
+.pay-grp-btn {
+  width: 100%; padding: 14px 16px; border-radius: 14px;
+  border: 1.5px solid var(--bdr); background: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700;
+  color: var(--tx); margin-bottom: 8px; transition: .15s;
+}
+.pay-grp-btn:active { background: var(--bg); }
+
+/* Mp-wrap for reception */
+.mp-wrap { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+.mpb { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--bdr); font-size: 13px; font-weight: 700; cursor: pointer; background: #fff; color: var(--tx2); font-family: 'Nunito', sans-serif; transition: .15s; white-space: nowrap; }
+.mpb.on { background: var(--p); color: #fff; border-color: var(--p); }

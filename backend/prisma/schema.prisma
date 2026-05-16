@@ -1,0 +1,350 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── FOYDALANUVCHILAR ──────────────────────────────────────────
+model User {
+  id         Int      @id @default(autoincrement())
+  telegramId BigInt   @unique @map("telegram_id")
+  role       Role     @default(receptionist)
+  firstName  String   @map("first_name")
+  lastName   String   @map("last_name")
+  phone      String?
+  username   String?
+  subject    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  taughtGroups     Group[]
+  expenses         Expense[]
+  teacherHistories GroupTeacherHistory[]
+  ratings          Rating[]
+
+  @@map("users")
+}
+
+enum Role {
+  admin
+  receptionist
+  teacher
+}
+
+// ── FANLAR ────────────────────────────────────────────────────
+model Subject {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  groups            Group[]
+  applicantSubjects ApplicantSubject[]
+  results           Result[]
+
+  @@map("subjects")
+}
+
+// ── GURUHLAR ──────────────────────────────────────────────────
+model Group {
+  id           Int         @id @default(autoincrement())
+  name         String
+  subjectId    Int         @map("subject_id")
+  teacherId    Int?        @map("teacher_id")
+  status       GroupStatus @default(active)
+  monthlyPrice BigInt?     @default(0) @map("monthly_price")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  subject        Subject               @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher        User?                 @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  groupStudents  GroupStudent[]
+  schedules      Schedule[]
+  payments       Payment[]
+  teacherHistory GroupTeacherHistory[]
+  transactions   StudentTransaction[]
+  monthlyPlans   MonthlyPaymentPlan[]
+  ratings        Rating[]
+
+  @@map("groups")
+}
+
+enum GroupStatus {
+  active
+  archived
+}
+
+model GroupTeacherHistory {
+  id        Int       @id @default(autoincrement())
+  groupId   Int       @map("group_id")
+  teacherId Int       @map("teacher_id")
+  startDate DateTime  @default(now()) @map("start_date")
+  endDate   DateTime? @map("end_date")
+
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher User  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@map("group_teacher_history")
+}
+
+// ── QABUL ─────────────────────────────────────────────────────
+model Applicant {
+  id            Int             @id @default(autoincrement())
+  firstName     String          @map("first_name")
+  lastName      String          @map("last_name")
+  educationType EducationType   @map("education_type")
+  grade         String?
+  phoneSelf     String?         @map("phone_self")
+  phoneFather   String?         @map("phone_father")
+  phoneMother   String?         @map("phone_mother")
+  telegramId    BigInt?         @map("telegram_id")
+  status        ApplicantStatus @default(waiting)
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  applicantSubjects ApplicantSubject[]
+  student           Student?
+
+  @@map("applicants")
+}
+
+enum EducationType {
+  school
+  college
+  adult
+}
+
+enum ApplicantStatus {
+  waiting
+  enrolled
+}
+
+model ApplicantSubject {
+  id          Int @id @default(autoincrement())
+  applicantId Int @map("applicant_id")
+  subjectId   Int @map("subject_id")
+
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  subject   Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([applicantId, subjectId])
+  @@map("applicant_subjects")
+}
+
+// ── O'QUVCHILAR ───────────────────────────────────────────────
+model Student {
+  id          Int      @id @default(autoincrement())
+  applicantId Int      @unique @map("applicant_id")
+  balance     BigInt   @default(0)
+  debtStatus  Boolean  @default(false) @map("debt_status")
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
+  deleteReason String?  @map("delete_reason")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  applicant     Applicant            @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  groupStudents GroupStudent[]
+  payments      Payment[]
+  transactions  StudentTransaction[]
+  monthlyPlans  MonthlyPaymentPlan[]
+  ratings       Rating[]
+
+  @@map("students")
+}
+
+model GroupStudent {
+  id        Int                @id @default(autoincrement())
+  groupId   Int                @map("group_id")
+  studentId Int                @map("student_id")
+  status    GroupStudentStatus @default(active)
+  joinedAt  DateTime           @default(now()) @map("joined_at")
+
+  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+
+  @@unique([groupId, studentId])
+  @@map("group_students")
+}
+
+enum GroupStudentStatus {
+  active
+  archived
+}
+
+// ── JADVAL VA DAVOMAT ─────────────────────────────────────────
+model Schedule {
+  id         Int      @id @default(autoincrement())
+  groupId    Int      @map("group_id")
+  lessonDate DateTime @map("lesson_date") @db.Date
+  startTime  String   @map("start_time")
+  endTime    String   @map("end_time")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+
+  // Bir kunda bir guruh bir vaqtda bir marta (multi-slot uchun startTime ham kiritildi)
+  @@unique([groupId, lessonDate, startTime])
+  @@map("schedules")
+}
+
+model Attendance {
+  id             Int      @id @default(autoincrement())
+  scheduleId     Int      @map("schedule_id")
+  groupStudentId Int      @map("group_student_id")
+  teacherId      Int?     @map("teacher_id")
+  isPresent      Boolean  @default(false) @map("is_present")
+  takenAt        DateTime @default(now()) @map("taken_at")
+
+  schedule     Schedule     @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  groupStudent GroupStudent @relation(fields: [groupStudentId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduleId, groupStudentId])
+  @@map("attendances")
+}
+
+// ── TO'LOV TIZIMI ─────────────────────────────────────────────
+// Payment — kassa kirim hisobi (har qanday to'lov turi)
+model Payment {
+  id          Int         @id @default(autoincrement())
+  studentId   Int         @map("student_id")
+  groupId     Int?        @map("group_id")       // null = balansga deposit
+  monthYear   String?     @map("month_year")     // null = deposit
+  amount      BigInt
+  paymentType PaymentType @map("payment_type")
+  fromBalance Boolean     @default(false) @map("from_balance")
+  isPartial   Boolean     @default(false) @map("is_partial")
+  targetAmount BigInt?    @map("target_amount")
+  note        String?
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+}
+
+// StudentTransaction — o'quvchi balans tarixi
+model StudentTransaction {
+  id          Int                    @id @default(autoincrement())
+  studentId   Int                    @map("student_id")
+  groupId     Int?                   @map("group_id")
+  monthYear   String?                @map("month_year")
+  amount      BigInt
+  type        String                 // 'deposit' | 'deduct' | 'refund'
+  description String
+  createdBy   Int?                   @map("created_by")
+  createdAt   DateTime               @default(now()) @map("created_at")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@map("student_transactions")
+}
+
+// StudentTransactionType: 'deposit' | 'deduct' | 'refund' (String field)
+
+// MonthlyPaymentPlan — oylik to'lov rejasi
+model MonthlyPaymentPlan {
+  id        Int      @id @default(autoincrement())
+  studentId Int      @map("student_id")
+  groupId   Int      @map("group_id")
+  monthYear String   @map("month_year")
+  amount    BigInt
+  isPaid    Boolean  @default(false) @map("is_paid")
+  paidAt    DateTime? @map("paid_at")
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, groupId, monthYear])
+  @@map("monthly_payment_plans")
+}
+
+// ── CHIQIMLAR VA KONVERSIYA ───────────────────────────────────
+model Expense {
+  id          Int             @id @default(autoincrement())
+  category    ExpenseCategory
+  subcategory String?
+  staffId     Int?            @map("staff_id")
+  monthYear   String?         @map("month_year")
+  amount      BigInt
+  paymentType PaymentType     @map("payment_type")
+  note        String?
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  staff User? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  @@map("expenses")
+}
+
+model Conversion {
+  id         Int            @id @default(autoincrement())
+  type       ConversionType
+  fromAmount BigInt         @map("from_amount")
+  toAmount   BigInt         @map("to_amount")
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  @@map("conversions")
+}
+
+// ── REYTING ───────────────────────────────────────────────────
+model Rating {
+  id        Int      @id @default(autoincrement())
+  studentId Int      @map("student_id")
+  groupId   Int      @map("group_id")
+  teacherId Int?     @map("teacher_id")
+  monthYear String   @map("month_year")
+  score     Int      @default(0)
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher User?   @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, groupId, monthYear])
+  @@map("ratings")
+}
+
+// ── NATIJALAR VA SOZLAMALAR ───────────────────────────────────
+model Result {
+  id          Int      @id @default(autoincrement())
+  subjectId   Int      @map("subject_id")
+  year        Int
+  studentName String   @map("student_name")
+  score       String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@map("results")
+}
+
+model Settings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+
+  @@map("settings")
+}
+
+// ── ENUMLAR ───────────────────────────────────────────────────
+enum PaymentType {
+  cash
+  card
+}
+
+enum ExpenseCategory {
+  staff
+  communal
+  other
+}
+
+enum ConversionType {
+  cash_to_card
+  card_to_cash
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Qabulga yozilish — Ta'lim Plus</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="/css/shared.css"/>
+</head>
+<body>
+<div id="toast"></div>
+<div id="loading">
+  <div class="ld-ico">📋</div>
+  <div class="spinner"></div>
+  <div class="ld-txt">Yuklanmoqda...</div>
+</div>
+<div id="app" style="display:none;padding:16px;padding-bottom:40px">
+  <div class="hero-card" style="margin-bottom:20px">
+    <div style="font-size:20px;font-weight:900;position:relative;z-index:1">🏫 Qabulga yozilish</div>
+    <div style="font-size:13px;opacity:.85;margin-top:6px;position:relative;z-index:1">Ta'lim Plus o'quv markazi</div>
+  </div>
+  <div id="form"></div>
+</div>
+<script src="/js/shared.js"></script>
+<script>
+async function init() {
+  try {
+    const subs = await G('/subjects');
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('form').innerHTML = `
+      <div class="ig"><label class="il"><i class="fa-solid fa-user"></i> Ismi</label><input id="ef_fn" class="inp" placeholder="Ismi"/></div>
+      <div class="ig"><label class="il"><i class="fa-solid fa-user"></i> Familyasi</label><input id="ef_ln" class="inp" placeholder="Familyasi"/></div>
+      <div class="ig"><label class="il"><i class="fa-solid fa-phone"></i> Telefon (o'zi)</label><input id="ef_ps" class="inp" type="tel" placeholder="+998 90 123 45 67"/></div>
+      <div class="ig"><label class="il"><i class="fa-solid fa-phone"></i> Otasi telefoni</label><input id="ef_pf" class="inp" type="tel" placeholder="+998 90 123 45 67"/></div>
+      <div class="ig"><label class="il"><i class="fa-solid fa-book-open"></i> Fanlar</label>
+        <div class="card">${subs.map(s=>`<div class="chk-row" onclick="togS(${s.id})"><div class="chk" id="cs${s.id}"></div><span style="font-size:15px;font-weight:600">${s.name}</span></div>`).join('')}</div>
+      </div>
+      <button class="btn bp" onclick="doSave()"><i class="fa-solid fa-paper-plane"></i> Yuborish</button>
+    `;
+    window._sels = new Set();
+    window.togS = id => {
+      const cb = document.getElementById('cs'+id);
+      if (_sels.has(id)) { _sels.delete(id); cb.classList.remove('on'); cb.textContent=''; }
+      else { _sels.add(id); cb.classList.add('on'); cb.textContent='✓'; }
+    };
+    window.doSave = async () => {
+      const fn=document.getElementById('ef_fn').value.trim(), ln=document.getElementById('ef_ln').value.trim();
+      const ps=document.getElementById('ef_ps').value.trim(), pf=document.getElementById('ef_pf').value.trim();
+      if(!fn||!ln) return toast('Ism va familya kerak','warn');
+      if(!ps&&!pf) return toast('Kamida bitta telefon kerak','warn');
+      if(!_sels.size) return toast('Kamida bitta fan tanlang','warn');
+      try {
+        await P('/applicants', { firstName:fn, lastName:ln, phoneSelf:ps, phoneFather:pf, educationType:'adult', subjectIds:[..._sels] });
+        document.getElementById('form').innerHTML = '<div class="empty"><div class="empty-ico"><i class="fa-solid fa-circle-check" style="font-size:52px;color:var(--ok)"></i></div><div class="empty-txt">Arizangiz qabul qilindi!<br>Tez orada siz bilan bog\'lanamiz.</div></div>';
+      } catch(e) { toast(e.message,'error'); }
+    };
+  } catch(e) {
+    document.getElementById('loading').innerHTML = '<div class="ld-ico"><i class="fa-solid fa-circle-exclamation" style="color:var(--r)"></i></div><div class="ld-txt">Xatolik yuz berdi</div>';
+  }
+}
+init();
+</script>
+</body>
+</html>

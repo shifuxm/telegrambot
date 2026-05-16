@@ -1,0 +1,5 @@
+[phases.build]
+cmds = ["npm install", "npx prisma generate --schema=backend/prisma/schema.prisma"]
+
+[start]
+cmd = "node backend/src/index.js"

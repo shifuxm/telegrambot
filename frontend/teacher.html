@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>O'qituvchi — Ta'lim Plus</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="/css/shared.css"/>
+<link rel="stylesheet" href="/css/teacher.css"/>
+</head>
+<body>
+<div id="toast"></div>
+
+<div id="loading">
+  <div class="ld-ico">👨‍🏫</div>
+  <div class="spinner"></div>
+  <div class="ld-txt">O'qituvchi paneli...</div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="pg-title" id="pgTitle">Jadval</div>
+    <div id="pgIco" style="font-size:22px">📅</div>
+  </div>
+
+  <div id="content" class="pv"></div>
+
+  <nav class="botnav">
+    <button class="btab on" id="tab_sched" onclick="tNav('sched')">
+      <div class="btab-icon">📅</div>
+      <span>Jadval</span>
+    </button>
+    <button class="btab" id="tab_att" onclick="tNav('att')">
+      <div class="btab-icon">✅</div>
+      <span>Davomat</span>
+    </button>
+    <button class="btab" id="tab_groups" onclick="tNav('groups')">
+      <div class="btab-icon">👥</div>
+      <span>Guruhlar</span>
+    </button>
+    <button class="btab" id="tab_rating" onclick="tNav('rating')">
+      <div class="btab-icon">⭐</div>
+      <span>Reyting</span>
+    </button>
+  </nav>
+</div>
+
+<div id="modals"></div>
+<script src="/js/shared.js"></script>
+<script src="/js/teacher.js"></script>
+</body>
+</html>
