@@ -1,0 +1,3494 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Admin — CRM</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f7fa;margin:0;overflow-x:hidden}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sidebar{position:fixed;top:0;left:0;width:280px;height:100vh;background:#07568A;z-index:400;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain}
+.sidebar.open{transform:translateX(0)}
+.sb-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:399;display:none}
+.sb-ov.open{display:block}
+.topbar{position:sticky;top:0;z-index:50;background:#07568A;color:#fff;padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(7,86,138,.3)}
+.hbtn{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nl{display:flex;align-items:center;gap:12px;padding:13px 20px;color:rgba(255,255,255,.7);font-size:14px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.nl:hover,.nl.active{background:rgba(255,255,255,.12);color:#fff}
+.nl.active{border-left-color:#fff}
+.nic{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nl.active .nic{background:rgba(255,255,255,.22)}
+.card{background:#fff;border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.li{display:flex;align-items:center;padding:14px 16px;background:#fff;border-bottom:1px solid #f3f4f6;cursor:pointer;transition:background .1s}
+.li:first-child{border-radius:16px 16px 0 0}.li:last-child{border-bottom:none;border-radius:0 0 16px 16px}.li:only-child{border-radius:16px}.li:active{background:#f9fafb}
+.lic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px}
+.inp{width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;outline:none;background:#fff;transition:border-color .15s;-webkit-appearance:none}
+.inp:focus{border-color:#07568A}
+.ig{margin-bottom:16px}
+.il{font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;width:100%}
+.btn:active{transform:scale(.98)}
+.bp{background:#07568A;color:#fff}.bs{background:#f3f4f6;color:#374151}.bd{background:#fee2e2;color:#ef4444}
+.bsm{padding:8px 14px;font-size:13px;width:auto;border-radius:10px}
+.tabs{display:flex;gap:4px;background:#f3f4f6;border-radius:12px;padding:4px;margin-bottom:16px}
+.tab{flex:1;padding:9px;text-align:center;border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:#6b7280;transition:all .15s}
+.tab.on{background:#fff;color:#07568A;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.chkr{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6;cursor:pointer}
+.chkr:last-child{border-bottom:none}
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.chk.on{background:#22c55e;border-color:#22c55e;color:#fff;font-size:13px}
+.mp{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scrollbar-width:none}
+.mp::-webkit-scrollbar{display:none}
+.mpb{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #e5e7eb;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:#6b7280;white-space:nowrap}
+.mpb.on{background:#07568A;color:#fff;border-color:#07568A}
+.sbox{display:flex;align-items:center;gap:10px;background:#f3f4f6;border-radius:12px;padding:11px 14px;margin-bottom:16px}
+.sbox input{border:none;background:transparent;outline:none;font-size:15px;flex:1}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:11px 22px;border-radius:24px;font-size:14px;font-weight:500;z-index:9999;white-space:nowrap;display:none;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.cald{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:14px;cursor:pointer}
+.cald.sel{background:#07568A;color:#fff !important;font-weight:700}
+.cald.td{font-weight:700;color:#07568A}
+.cald.past{color:#d1d5db;pointer-events:none}.cald.sel.past{color:#fff !important;pointer-events:auto}
+.st{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.pv{padding:16px;padding-bottom:32px}
+</style>
+</head>
+
+<style>
+@keyframes tp-logoIn{0%{opacity:0;transform:scale(.80)}65%{opacity:1;transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+@keyframes tp-fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tp-barFill{0%{width:0%}25%{width:38%}55%{width:68%}80%{width:88%}100%{width:100%}}
+@keyframes tp-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes tp-shimmer{0%{background-position:-500px 0}100%{background-position:500px 0}}
+.sk{background:linear-gradient(90deg,#eaedf3 25%,#f5f7fb 50%,#eaedf3 75%);background-size:500px 100%;animation:tp-shimmer 1.4s infinite linear;border-radius:10px}
+.tp-inline-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:52px 20px;gap:14px}
+.tp-spinner{width:34px;height:34px;border:3px solid #eaedf3;border-top-color:#2D5BFF;border-radius:50%;animation:spin .75s linear infinite}
+.tp-spinner-text{font-size:13px;font-weight:600;color:#8A93AD;animation:tp-pulse 1.6s ease-in-out infinite}
+</style>
+<style>
+
+/* ── Kalendar kuni (asosiy) ── */
+.cald {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .12s, color .12s, transform .1s;
+  position: relative;
+  font-weight: 500;
+}
+.cald:hover:not(.past) {
+  background: #F0EAFE;
+  transform: scale(1.08);
+}
+
+/* Bugungi kun */
+.cald.td {
+  font-weight: 800;
+  color: #2D5BFF;
+}
+
+/* O'tgan kunlar */
+.cald.past {
+  color: #D1D5DB;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Slot 1 — Ko'k (tanlangan) */
+.cald.sel-1 {
+  background: #2D5BFF !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(45,91,255,.35);
+}
+.cald.sel-1.past {
+  background: #93AFFF !important;
+  color: #fff !important;
+  pointer-events: auto;
+  opacity: 0.7;
+}
+
+/* Slot 2 — Yashil */
+.cald.sel-2 {
+  background: #10B981 !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(16,185,129,.35);
+}
+.cald.sel-2.past {
+  background: #6EE7B7 !important;
+  color: #fff !important;
+  pointer-events: auto;
+  opacity: 0.7;
+}
+
+/* Slot 3 — To'q sariq */
+.cald.sel-3 {
+  background: #F59E0B !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(245,158,11,.35);
+}
+.cald.sel-3.past {
+  background: #FCD34D !important;
+  color: #fff !important;
+  pointer-events: auto;
+  opacity: 0.7;
+}
+
+/* Eski .sel — orqaga mos (1-slot bilan bir xil) */
+.cald.sel {
+  background: #2D5BFF !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(45,91,255,.35);
+}
+.cald.sel.past {
+  color: #fff !important;
+  pointer-events: auto;
+}
+
+/* Bir kunda bir nechta slot belgisi (nuqta) */
+.cald-dot {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+}
+.cald-dot span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  display: block;
+}
+
+/* ── Slot tab tugmalari ── */
+.slot-tab {
+  flex: 1;
+  padding: 9px 6px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  line-height: 1.3;
+}
+.slot-tab.active-1 {
+  background: #EAF0FF;
+  color: #2D5BFF;
+  border-color: #2D5BFF;
+}
+.slot-tab.active-2 {
+  background: #E6F8F0;
+  color: #10B981;
+  border-color: #10B981;
+}
+.slot-tab.active-3 {
+  background: #FEF4E0;
+  color: #F59E0B;
+  border-color: #F59E0B;
+}
+.slot-tab.inactive {
+  background: #F8F9FC;
+  color: #8A93AD;
+  border-color: #EAEDF3;
+}
+.slot-tab.add-slot {
+  background: #F8F9FC;
+  color: #8A93AD;
+  border: 1.5px dashed #D1D5DB;
+}
+.slot-tab.add-slot:hover {
+  background: #F0EAFE;
+  color: #8056F5;
+  border-color: #8056F5;
+}
+
+/* ── Jadval sahifasi karta uslubi ── */
+.sch-card {
+  background: #fff;
+  border-radius: 18px;
+  border: 1.5px solid #EAEDF3;
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.sch-day-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-bottom: 1px solid #F2F4F8;
+  gap: 12px;
+}
+.sch-day-row:last-child { border-bottom: none; }
+.sch-day-badge {
+  min-width: 44px;
+  text-align: center;
+  padding: 6px 4px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+.sch-group-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 2px;
+}
+</style>
+<body>
+<div id="toast"></div>
+
+
+<div id="loading" style="
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;background:#F5F7FB;
+  flex-direction:column;gap:0;font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+">
+  <!-- Logo kartochkasi -->
+  <div style="
+    width:96px;height:96px;border-radius:28px;
+    background:#fff;border:1.5px solid #EAEDF3;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 32px rgba(45,91,255,.10),0 2px 8px rgba(0,0,0,.06);
+    animation:tp-logoIn 0.55s cubic-bezier(.22,.68,0,1.2) both;
+    overflow:hidden;margin-bottom:24px;
+  ">
+    <!-- Logo rasmini /logo.png dan yuklaymiz -->
+    <img
+      src="/logo.png"
+      alt="Logo"
+      style="width:72px;height:72px;object-fit:contain;"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+    />
+    <!-- Fallback: logo.png topilmasa monogram ko'rsatiladi -->
+    <div style="
+      display:none;width:72px;height:72px;
+      align-items:center;justify-content:center;
+      font-size:28px;font-weight:800;color:#2D5BFF;
+      letter-spacing:-1px;
+    ">T+</div>
+  </div>
+
+  <!-- Ilova nomi -->
+  <div style="
+    font-size:18px;font-weight:800;color:#0B1437;
+    letter-spacing:-0.3px;margin-bottom:4px;
+    animation:tp-fadeUp 0.5s 0.2s both;
+  ">Ta'lim Plus</div>
+
+  <div style="
+    font-size:12px;font-weight:600;color:#8A93AD;
+    letter-spacing:0.3px;margin-bottom:32px;
+    animation:tp-fadeUp 0.5s 0.3s both;
+  ">O'quv Markazi CRM</div>
+
+  <!-- Progress bar -->
+  <div style="
+    width:156px;height:3px;background:#EAEDF3;
+    border-radius:4px;overflow:hidden;
+    animation:tp-fadeUp 0.4s 0.4s both;
+  ">
+    <div style="
+      height:100%;
+      background:linear-gradient(90deg,#2D5BFF,#8056F5);
+      border-radius:4px;
+      animation:tp-barFill 2.4s cubic-bezier(.4,0,.2,1) forwards;
+    "></div>
+  </div>
+
+<div id="app" style="display:none">
+  <div class="sb-ov" id="sbov" onclick="sbClose()"></div>
+  <div class="sidebar" id="sidebar">
+    <div style="background:linear-gradient(135deg,#07568A,#0a7bc4);padding:28px 20px 20px;color:#fff;text-align:center">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:3px solid rgba(255,255,255,.3)">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      </div>
+      <div style="font-weight:700;font-size:17px" id="sbName">Admin</div>
+      <div style="font-size:13px;opacity:.75;margin-top:4px">Administrator</div>
+    </div>
+    <div style="padding:12px 0;flex:1" id="sbNav"></div>
+    <div style="padding:16px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.3);text-align:center">O'quv Markazi CRM v3.0</div>
+  </div>
+
+  <div class="topbar">
+    <button class="hbtn" onclick="sbOpen()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <span style="font-size:17px;font-weight:600" id="pgTitle">Statistika</span>
+    <div style="width:36px"></div>
+  </div>
+
+  <div id="content" class="pv"></div>
+</div>
+
+<div id="modals"></div>
+
+
+<div id="modals"></div>
+
+<script>
+
+// ============ CORE ============
+const tg = window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();}
+
+function getTid(){
+  const uid = tg?.initDataUnsafe?.user?.id;
+  if(uid) return uid.toString();
+  try{
+    const raw = tg?.initData || '';
+    if(raw){
+      const p = new URLSearchParams(raw);
+      const u = JSON.parse(decodeURIComponent(p.get('user') || '{}'));
+      if(u.id) return u.id.toString();
+    }
+  }catch(e){}
+  return null;
+}
+
+async function api(method, path, body){
+  const tid = getTid();
+  const headers = {'Content-Type':'application/json'};
+  if(tid) headers['x-telegram-id'] = tid;
+  const r = await fetch('/api'+path, {method, headers, body: body ? JSON.stringify(body) : undefined});
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.error || 'Xatolik');
+  return d;
+}
+const G = p => api('GET', p);
+const P = (p, b) => api('POST', p, b);
+const U = (p, b) => api('PUT', p, b);
+const D = p => api('DELETE', p);
+
+function fmt(n){ return Number(n).toLocaleString('ru-RU') + " so'm"; }
+function mLabel(my){ if(!my)return''; const[y,m]=my.split('-'); const ms=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr']; return ms[parseInt(m)-1]+' '+y; }
+function sixMonths(){ const now=new Date(),res=[]; for(let i=-2;i<=3;i++){ const d=new Date(now.getFullYear(),now.getMonth()+i,1); const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; if(k>='2026-04')res.push(k); } return res; }
+function nowMonth(){ const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; }
+
+let _tt;
+function toast(msg, ms=2800){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(_tt); _tt=setTimeout(()=>t.style.display='none', ms); }
+function ldHtml(){ return `<div style="display:flex;justify-content:center;padding:48px"><svg style="animation:spin .7s linear infinite" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#07568A" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg></div>`; }
+function emHtml(msg){ return `<div style="text-align:center;padding:48px 20px;color:#9ca3af"><div style="font-size:48px;margin-bottom:12px">📭</div><div style="font-size:14px">${msg}</div></div>`; }
+
+function openModal(title, html){
+  closeModal();
+  const d = document.createElement('div');
+  d.id = 'modal';
+  d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end';
+  d.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:92vh;overflow-y:auto;animation:slideUp .25s ease;overscroll-behavior:contain">
+    <div style="padding:12px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;background:#fff;z-index:10">
+      <div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 14px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:18px;font-weight:700">${title}</div>
+        <button onclick="closeModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#9ca3af;padding:0">×</button>
+      </div>
+    </div>
+    <div style="padding:16px 20px 32px">${html}</div>
+  </div>`;
+  d.addEventListener('click', e => { if(e.target===d) closeModal(); });
+  document.getElementById('modals').appendChild(d);
+}
+function closeModal(){ const m=document.getElementById('modal'); if(m) m.remove(); }
+
+// ============ SIDEBAR ============
+function sbOpen(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sbov').classList.add('open'); document.body.style.overflow='hidden'; }
+function sbClose(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sbov').classList.remove('open'); document.body.style.overflow=''; }
+
+
+const ADMIN_NAV = [
+  { id: 'stats',     label: 'Statistika',
+    svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>' },
+  { id: 'students',  label: "O'quvchilar",
+    svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+  { id: 'staff',     label: 'Hodimlar',
+    svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
+  { id: 'schedule',  label: 'Dars jadvali',
+    svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
+  { id: 'debtors',   label: 'Qarzdorlar',
+    svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' },
+  { id: 'attendance', label: 'Davomat',
+    svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' },
+  // ← 4-modul: yangi sahifa
+  { id: 'archived',  label: "O'chirilganlar",
+    svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>' },
+  { id: 'settings',  label: 'Sozlamalar',
+    svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 12 2a10 10 0 0 0-7.07 2.93M4.93 4.93A10 10 0 0 0 2 12a10 10 0 0 0 2.93 7.07M19.07 19.07A10 10 0 0 0 22 12a10 10 0 0 0-2.93-7.07M12 22a10 10 0 0 0 7.07-2.93"/></svg>' },
+  { id: 'delstaff',  label: "O'chirish",
+    svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' },
+];
+const TITLES = {
+  stats:      'Statistika',
+  students:   "O'quvchilar",
+  staff:      'Hodimlar',
+  schedule:   'Dars jadvali',
+  debtors:    'Qarzdorlar',
+  attendance: 'Davomat',
+  archived:   "O'chirilgan O'quvchilar",   // ← yangi
+  settings:   'Sozlamalar',
+  delstaff:   "O'chirish",
+};
+
+let curPage='stats';
+
+function nav(page){
+  curPage=page;
+  document.getElementById('pgTitle').textContent=TITLES[page]||page;
+  document.querySelectorAll('.nl').forEach(el=>el.classList.toggle('active',el.id===`nl_${page}`));
+  sbClose();
+  const el=document.getElementById('content');
+  el.innerHTML=ldHtml();
+  ({stats:rStats,students:rStudents,staff:rStaff,schedule:rSchedule,
+    debtors:rDebtors,attendance:rAttendance,archived:rArchivedStudents,
+    settings:rSettings,delstaff:rDelStaff})[page]?.(el);
+}
+
+function setupSidebar(user){
+  document.getElementById('sbName').textContent=`${user.firstName||''} ${user.lastName||''}`;
+  document.getElementById('sbNav').innerHTML=ADMIN_NAV.map(n=>`
+    <div class="nl${curPage===n.id?' active':''}" id="nl_${n.id}" onclick="nav('${n.id}')">
+      <div class="nic">${n.svg}</div><span>${n.label}</span>
+    </div>`).join('');
+}
+
+// ============ INIT ============
+async function init(){
+  try{
+    const user=await G('/auth/me');
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    setupSidebar(user);
+    nav('stats');
+  }catch(e){
+    const ld=document.getElementById('loading');
+    ld.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f5f7fa;text-align:center;padding:40px';
+    ld.innerHTML=String.fromCharCode(128126)+'<br><br><b style="font-size:16px;color:#374151">Tizimga kirish uchun</b><br><span style="font-size:14px;color:#6b7280">Botda /start bosib, CRM ni oching</span>';
+  }
+}
+
+
+
+function ldHtml() {
+  return `<div class="tp-inline-loader">
+    <div class="tp-spinner"></div>
+    <span class="tp-spinner-text">Yuklanmoqda...</span>
+  </div>`;
+}
+
+// ── ldSkeletonStats — statistika uchun skeleton ──
+function ldSkeletonStats() {
+  const skCard = (w1, w2) => `
+    <div style="background:#fff;border-radius:18px;border:1px solid #EAEDF3;padding:18px 16px;text-align:center;">
+      <div class="sk" style="width:48px;height:48px;border-radius:16px;margin:0 auto 12px;"></div>
+      <div class="sk" style="width:${w1}%;height:26px;margin:0 auto 8px;"></div>
+      <div class="sk" style="width:${w2}%;height:11px;margin:0 auto;"></div>
+    </div>`;
+  const skFin = () => `
+    <div style="background:#fff;border-radius:18px;border:1px solid #EAEDF3;padding:16px 20px;margin-bottom:10px;">
+      <div class="sk" style="width:38%;height:11px;margin-bottom:10px;"></div>
+      <div class="sk" style="width:65%;height:26px;margin-bottom:10px;"></div>
+      <div class="sk" style="width:90%;height:12px;"></div>
+    </div>`;
+
+  return `
+    <div style="animation:tp-fadeUp .3s both">
+      <!-- Oy tugmalari skeleton -->
+      <div style="display:flex;gap:8px;padding:0 16px 16px;overflow:hidden;">
+        ${[80,64,72,68,76].map(w =>
+          `<div class="sk" style="width:${w}px;height:34px;border-radius:22px;flex-shrink:0;"></div>`
+        ).join('')}
+      </div>
+      <!-- 4 ta karta skeleton -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 14px;">
+        ${skCard(55,75)}
+        ${skCard(45,80)}
+        ${skCard(60,70)}
+        ${skCard(50,72)}
+      </div>
+      <!-- Finance skeleton -->
+      <div style="padding:0 16px;">
+        ${skFin()}${skFin()}
+      </div>
+    </div>`;
+}
+
+
+// ============ STATS ============
+async function rStats(el) {
+  const months = sixMonths();
+  let sel = nowMonth();
+
+  // ── Oy tanlash tugmalari ──
+  function mpHtml() {
+    return `<div class="mp" style="padding:0 0 4px;">
+      ${months.map(m => `
+        <div class="mpb${m === sel ? ' on' : ''}"
+             onclick="smsel('${m}')"
+             style="${m === sel
+               ? 'background:#2D5BFF;color:#fff;border-color:#2D5BFF;box-shadow:0 4px 12px rgba(45,91,255,.35);'
+               : 'background:#fff;color:#525B7A;'} font-weight:700;">
+          ${mLabel(m)}
+        </div>`
+      ).join('')}
+    </div>`;
+  }
+
+  // ── Pul formatlash ──
+  function fmtSum(n) {
+    if (n === null || n === undefined) return '—';
+    return Number(n).toLocaleString('ru-RU') + " so'm";
+  }
+
+  // ── Ma'lumotlarni yuklash ──
+  async function load() {
+    el.innerHTML = mpHtml() + ldSkeletonStats();
+    try {
+      // Parallel: statistika + xodimlar
+      const [d, staffList] = await Promise.all([
+        G(`/statistics?monthYear=${sel}`),
+        G('/staff')
+      ]);
+      const staffCount = Array.isArray(staffList) ? staffList.length : '—';
+      draw(d, staffCount);
+    } catch (e) {
+      el.innerHTML = mpHtml() + `
+        <div style="text-align:center;padding:48px 20px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+          <div style="width:56px;height:56px;border-radius:16px;background:#FCEDEC;
+               display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            </svg>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:#0B1437;margin-bottom:6px;">
+            Ma'lumotlarni yuklab bo'lmadi
+          </div>
+          <div style="font-size:13px;color:#8A93AD;margin-bottom:18px;">
+            Tarmoq ulanishini tekshirib, qayta urining
+          </div>
+          <button onclick="smsel('${sel}')"
+            style="background:#2D5BFF;color:#fff;border:none;border-radius:12px;
+                   padding:11px 24px;font-size:14px;font-weight:700;cursor:pointer;
+                   font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+            Qayta urinish
+          </button>
+        </div>`;
+    }
+  }
+
+  // ── Asosiy render ──
+  function draw(d, staffCount) {
+
+    // Bo'sh oy
+    if (d.noData) {
+      el.innerHTML = mpHtml() + `
+        <div style="text-align:center;padding:52px 20px;
+             font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+          <div style="width:56px;height:56px;border-radius:16px;background:#F3F4F6;
+               display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:#0B1437;margin-bottom:6px;">
+            Bu oydagi ma'lumotlar mavjud emas
+          </div>
+          <div style="font-size:13px;color:#8A93AD;">Boshqa oyni tanlang</div>
+        </div>`;
+      window.smsel = m => { sel = m; load(); };
+      return;
+    }
+
+    const inc    = d.income;
+    const exp    = d.expense;
+    const profit = BigInt(inc.total) - BigInt(exp.total);
+    const pos    = profit >= 0;
+
+    // ── StatCard yordamchi funksiya ──
+    const statCard = ({ icon, iconColor, iconBg, value, label, sublabel, onclick }) => {
+      const onclickAttr = onclick ? `onclick="${onclick}" style="cursor:pointer;"` : '';
+      return `
+        <div class="card" ${onclickAttr}
+          style="padding:18px 16px;text-align:center;border:1.5px solid #EAEDF3;border-radius:18px;
+                 transition:box-shadow .2s,transform .15s;
+                 font-family:'Plus Jakarta Sans',system-ui,sans-serif;"
+          onmouseenter="this.style.boxShadow='0 8px 24px ${iconColor}20';this.style.transform='translateY(-2px)';this.style.borderColor='${iconColor}33';"
+          onmouseleave="this.style.boxShadow='';this.style.transform='';this.style.borderColor='#EAEDF3';">
+          <div style="width:48px;height:48px;border-radius:16px;background:${iconBg};
+               display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="${icon}"/>
+            </svg>
+          </div>
+          <div style="font-size:28px;font-weight:800;color:${iconColor};line-height:1.1;
+               margin-bottom:6px;letter-spacing:-0.5px;">
+            ${value ?? '—'}
+          </div>
+          <div style="font-size:11.5px;color:#8A93AD;font-weight:700;letter-spacing:0.2px;">
+            ${label}
+          </div>
+          ${sublabel ? `<div style="font-size:10.5px;color:#8A93AD;margin-top:4px;">${sublabel}</div>` : ''}
+          ${onclick ? `<div style="position:absolute;top:10px;right:10px;opacity:0.3;color:${iconColor};">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </div>` : ''}
+        </div>`;
+    };
+
+    // ── Finance card ──
+    const finCard = ({ label, amount, cash, card, color, bg, border, onclick }) => {
+      const onclickAttr = onclick ? `onclick="${onclick}" style="cursor:pointer;"` : '';
+      return `
+        <div ${onclickAttr}
+          style="background:${bg};border:1.5px solid ${border};border-radius:18px;
+                 padding:16px 20px;margin-bottom:10px;
+                 font-family:'Plus Jakarta Sans',system-ui,sans-serif;"
+          onmouseenter="this.style.boxShadow='0 6px 20px ${color}22';this.style.transform='translateY(-1px)';"
+          onmouseleave="this.style.boxShadow='';this.style.transform='';">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-size:11px;font-weight:800;color:${color};letter-spacing:0.6px;">${label}</div>
+            ${onclick ? `<div style="font-size:11px;color:${color};font-weight:700;">Batafsil →</div>` : ''}
+          </div>
+          <div style="font-size:26px;font-weight:800;color:${color};letter-spacing:-0.5px;margin-bottom:10px;">
+            ${fmtSum(amount)}
+          </div>
+          <div style="display:flex;gap:18px;font-size:12px;color:${color};opacity:0.85;">
+            <span>💵 Naqd: <b>${fmtSum(cash)}</b></span>
+            <span>💳 Karta: <b>${fmtSum(card)}</b></span>
+          </div>
+        </div>`;
+    };
+
+    // ── HTML yig'ish ──
+    el.innerHTML = `
+      ${mpHtml()}
+      <div style="padding:0 16px 32px;animation:tp-fadeUp .3s both;">
+
+        <!-- Sarlavha -->
+        <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:0.6px;
+             text-transform:uppercase;margin-bottom:10px;">
+          Umumiy Ko'rsatkichlar
+        </div>
+
+        <!-- 4 ta kartochka -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;position:relative;">
+
+          ${statCard({
+            icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
+            iconColor: "#2D5BFF", iconBg: "#EAF0FF",
+            value: d.totalStudents,
+            label: "Faol O'quvchilar",
+            sublabel: d.twoPlus ? `${d.twoPlus} ta — 2+ fanda` : '',
+            onclick: "nav('students')"
+          })}
+
+          ${statCard({
+            icon: "M3 4h18v18H3zM3 10h18M16 2v4M8 2v4",
+            iconColor: "#10B981", iconBg: "#E6F8F0",
+            value: d.groupsCount,
+            label: "Faol Guruhlar",
+            onclick: "nav('schedule')"
+          })}
+
+          ${statCard({
+            icon: "M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
+            iconColor: "#F59E0B", iconBg: "#FEF4E0",
+            value: d.paidStudents ?? 0,
+            label: `To'lov Qildi (${mLabel(sel)})`,
+            sublabel: d.totalStudents
+              ? `${Math.round((d.paidStudents / d.totalStudents) * 100)}%`
+              : '',
+            onclick: "nav('debtors')"
+          })}
+
+          ${statCard({
+            icon: "M20 7H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16",
+            iconColor: "#8056F5", iconBg: "#F0EAFE",
+            value: staffCount,
+            label: "Xodimlar",
+            onclick: "nav('staff')"
+          })}
+        </div>
+
+        <!-- Moliya sarlavhasi -->
+        <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:0.6px;
+             text-transform:uppercase;margin-bottom:10px;">
+          Moliyaviy Hisobot — ${mLabel(sel)}
+        </div>
+
+        <!-- Oylik tushum -->
+        ${finCard({
+          label: "OYLIK TUSHUM",
+          amount: inc.total, cash: inc.cash, card: inc.card,
+          color: "#1D4ED8", bg: "#EFF6FF", border: "#BFDBFE"
+        })}
+
+        <!-- Oylik chiqim -->
+        ${finCard({
+          label: "OYLIK CHIQIM",
+          amount: exp.total, cash: exp.cash, card: exp.card,
+          color: "#DC2626", bg: "#FEF2F2", border: "#FECACA",
+          onclick: "showExpensesDetail()"
+        })}
+
+        <!-- Soff foyda / zarar -->
+        <div style="background:${pos ? '#F0FDF4' : '#FEF2F2'};
+             border:1.5px solid ${pos ? '#BBF7D0' : '#FECACA'};
+             border-radius:18px;padding:16px 20px;margin-bottom:10px;
+             display:flex;align-items:center;justify-content:space-between;
+             font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+          <div>
+            <div style="font-size:11px;font-weight:800;
+                 color:${pos ? '#15803D' : '#DC2626'};
+                 letter-spacing:0.6px;margin-bottom:6px;">
+              ${pos ? 'SOFF FOYDA' : 'ZARAR'}
+            </div>
+            <div style="font-size:26px;font-weight:800;
+                 color:${pos ? '#15803D' : '#DC2626'};letter-spacing:-0.5px;">
+              ${pos ? '+' : ''}${fmtSum(profit.toString())}
+            </div>
+          </div>
+          <div style="width:52px;height:52px;border-radius:16px;
+               background:${pos ? '#10B98120' : '#EF444420'};
+               display:flex;align-items:center;justify-content:center;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                 stroke="${pos ? '#15803D' : '#DC2626'}" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="${pos
+                ? 'M18 20V10M12 20V4M6 20v-6'
+                : 'M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'
+              }"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Joriy Balans -->
+        <div class="card" style="padding:16px 20px;margin-bottom:10px;border-radius:18px;
+             border:1.5px solid #EAEDF3;font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+          <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:0.6px;
+               text-transform:uppercase;margin-bottom:14px;">
+            Joriy Balans
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+            <div>
+              <div style="font-size:10.5px;color:#8A93AD;font-weight:700;margin-bottom:5px;">Naqd pul</div>
+              <div style="font-weight:800;color:#10B981;font-size:14px;">${fmtSum(d.balance.cash)}</div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;color:#8A93AD;font-weight:700;margin-bottom:5px;">Karta</div>
+              <div style="font-weight:800;color:#2D5BFF;font-size:14px;">${fmtSum(d.balance.card)}</div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;color:#8A93AD;font-weight:700;margin-bottom:5px;">Jami</div>
+              <div style="font-weight:800;color:#0B1437;font-size:14px;">${fmtSum(d.balance.total)}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- O'tgan oy -->
+        ${d.prevMonth ? `
+        <div class="card" style="padding:14px 20px;border-radius:18px;border:1.5px solid #EAEDF3;
+             font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+          <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:0.6px;
+               text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8A93AD"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+            </svg>
+            O'tgan Oy — ${mLabel(d.prevMonth.month)}
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;
+               font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+            <span style="color:#525B7A;">Kirim: <b style="color:#10B981;">${fmtSum(d.prevMonth.income)}</b></span>
+            <span style="color:#525B7A;">Chiqim: <b style="color:#EF4444;">${fmtSum(d.prevMonth.expense)}</b></span>
+          </div>
+        </div>` : ''}
+
+      </div>
+    `;
+
+    // ── Event bindings ──
+    window.smsel = m => { sel = m; load(); };
+    window.showExpensesDetail = showExpensesDetailFn;
+  }
+
+  // ── Chiqimlar detali (modal) ──
+  async function showExpensesDetailFn() {
+    const expenses = await G('/expenses');
+    const byStaff = {}, byCommunal = {}, otherList = [];
+    for (const e of expenses) {
+      if (e.category === 'staff') {
+        const k = e.staffId || 'unknown';
+        if (!byStaff[k]) byStaff[k] = {
+          name: e.staff ? `${e.staff.firstName} ${e.staff.lastName}` : "Noma'lum",
+          items: []
+        };
+        byStaff[k].items.push(e);
+      } else if (e.category === 'communal') {
+        const k = e.subcategory || 'Boshqa';
+        if (!byCommunal[k]) byCommunal[k] = [];
+        byCommunal[k].push(e);
+      } else {
+        otherList.push(e);
+      }
+    }
+
+    function eItem(e) {
+      const dt = new Date(e.createdAt);
+      const ds = `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}.${dt.getFullYear()}`;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;
+               padding:10px 0;border-bottom:1px solid #F5F7FB;">
+        <div>
+          <div style="font-size:14px;font-weight:600;">${e.monthYear || ds}</div>
+          ${e.note ? `<div style="font-size:12px;color:#8A93AD;">${e.note}</div>` : ''}
+          <div style="font-size:11px;color:#8A93AD;">${ds} · ${e.paymentType === 'cash' ? 'Naqd' : 'Karta'}</div>
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#EF4444;white-space:nowrap;">${fmtSum(e.amount)}</div>
+      </div>`;
+    }
+
+    const grandTotal = expenses.reduce((s, e) => s + BigInt(e.amount), BigInt(0));
+    let html = `<div style="background:#FEF2F2;border-radius:14px;padding:14px 16px;margin-bottom:20px;
+       display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:13px;font-weight:800;color:#DC2626;letter-spacing:0.4px;">JAMI CHIQIM</span>
+      <span style="font-size:20px;font-weight:800;color:#DC2626;">${fmtSum(grandTotal.toString())}</span>
+    </div>`;
+
+    // Hodim maoshi
+    if (Object.keys(byStaff).length) {
+      html += `<div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;color:#0B1437;margin-bottom:10px;
+             display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:8px;background:#EAF0FF;
+               display:flex;align-items:center;justify-content:center;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2D5BFF" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          Hodim Maoshi
+        </div>`;
+      for (const [, v] of Object.entries(byStaff)) {
+        const total = v.items.reduce((s, e) => s + BigInt(e.amount), BigInt(0));
+        html += `<div style="background:#FAFAFA;border-radius:14px;padding:12px 14px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:14px;font-weight:700;">${v.name}</span>
+            <span style="font-size:14px;font-weight:800;color:#EF4444;">${fmtSum(total.toString())}</span>
+          </div>
+          ${v.items.map(eItem).join('')}
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    // Kommunal
+    if (Object.keys(byCommunal).length) {
+      html += `<div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;color:#0B1437;margin-bottom:10px;
+             display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:8px;background:#FEF4E0;
+               display:flex;align-items:center;justify-content:center;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+          </div>
+          Kommunal To'lovlar
+        </div>`;
+      for (const [k, items] of Object.entries(byCommunal)) {
+        const total = items.reduce((s, e) => s + BigInt(e.amount), BigInt(0));
+        html += `<div style="background:#FAFAFA;border-radius:14px;padding:12px 14px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:14px;font-weight:700;">${k}</span>
+            <span style="font-size:14px;font-weight:800;color:#EF4444;">${fmtSum(total.toString())}</span>
+          </div>
+          ${items.map(eItem).join('')}
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    // Boshqa chiqimlar
+    if (otherList.length) {
+      const total = otherList.reduce((s, e) => s + BigInt(e.amount), BigInt(0));
+      html += `<div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;color:#0B1437;margin-bottom:10px;
+             display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:8px;background:#F3F4F6;
+               display:flex;align-items:center;justify-content:center;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+          </div>
+          Boshqa Chiqimlar
+        </div>
+        <div style="background:#FAFAFA;border-radius:14px;padding:12px 14px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:14px;font-weight:700;">Jami</span>
+            <span style="font-size:14px;font-weight:800;color:#EF4444;">${fmtSum(total.toString())}</span>
+          </div>
+          ${otherList.map(eItem).join('')}
+        </div>
+      </div>`;
+    }
+
+    if (!expenses.length) {
+      html += `<div style="text-align:center;padding:32px;color:#8A93AD;font-size:14px;">
+        Hech qanday chiqim topilmadi
+      </div>`;
+    }
+
+    openModal("Barcha Chiqimlar", html);
+  }
+
+  // ── Ishga tushirish ──
+  load();
+}
+// ════════════════════════════════════════════════════════════════
+
+
+// ============ STUDENTS ============
+async function rStudents(el) {
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  const ICO = {
+    search:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+    user:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2D5BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    chevron: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
+    check:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    x:       `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    dash:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    tag:     `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+    archive: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+    wallet:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/></svg>`,
+    clock:   `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  };
+
+  let srch = '';
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;background:#F3F4F6;
+                border-radius:14px;padding:11px 14px;margin-bottom:16px;">
+      ${ICO.search}
+      <input placeholder="Ism yoki familya..." oninput="stSrch(this.value)"
+        style="border:none;background:transparent;outline:none;font-size:15px;
+               flex:1;font-family:${FONT};color:#0B1437;"/>
+    </div>
+    <div id="stList"></div>`;
+
+  window.stSrch = v => { srch = v; load(); };
+
+  async function load() {
+    const data = await G(`/students${srch ? `?search=${encodeURIComponent(srch)}` : ''}`);
+    const list = document.getElementById('stList');
+    if (!data.length) { list.innerHTML = emHtml ? emHtml("O'quvchilar yo'q") : ''; return; }
+
+    list.innerHTML = `<div class="card" style="padding:0;overflow:hidden;">
+      ${data.map(s => `
+        <div class="li" onclick="openStudent(${s.id})">
+          <div class="lic" style="background:#EAF0FF;">${ICO.user}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:15px;font-weight:700;color:#0B1437;font-family:${FONT};">
+              ${s.applicant.firstName} ${s.applicant.lastName}
+            </div>
+            <div style="font-size:12px;color:#8A93AD;margin-top:2px;font-family:${FONT};">
+              ${s.groupStudents.map(gs => gs.group.subject.name).join(', ')}
+            </div>
+          </div>
+          ${ICO.chevron}
+        </div>`).join('')}
+    </div>`;
+  }
+
+  // ── Davomat jadvali ──────────────────────────────────────────────
+  window.showAttJadval = async (studentId, groupId, groupName, subjectName) => {
+    const months = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+    const now = new Date();
+    let html = '';
+    for (let i = 2; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const y = d.getFullYear(), m = d.getMonth();
+      const monthStr = y + '-' + String(m + 1).padStart(2, '0');
+      const monthLabel = months[m] + ' ' + y;
+      try {
+        const scheds = await G('/schedule/group/' + groupId + '?month=' + monthStr);
+        if (!scheds.length) {
+          html += `<div style="margin-bottom:16px;"><div class="st">${monthLabel}</div><div style="font-size:13px;color:#D1D5DB;padding:4px 0;">Dars yo'q</div></div>`;
+          continue;
+        }
+        const atts = await G('/attendance/student/' + studentId + '?groupId=' + groupId + '&month=' + monthStr);
+        const attMap = {};
+        (atts || []).forEach(a => { attMap[a.scheduleId] = { isPresent: a.isPresent }; });
+        let present = 0, absent = 0;
+        const rows = scheds.map(sch => {
+          const dt = new Date(sch.lessonDate);
+          const ds = String(dt.getDate()).padStart(2,'0') + '.' + String(dt.getMonth()+1).padStart(2,'0');
+          const att = attMap[sch.id];
+          let ico, color;
+          if (!att) { ico = ICO.dash; color = '#D1D5DB'; }
+          else if (att.isPresent) { ico = ICO.check; color = '#10B981'; present++; }
+          else { ico = ICO.x; color = '#EF4444'; absent++; }
+          return `<div style="display:flex;justify-content:space-between;align-items:center;
+                              padding:8px 0;border-bottom:1px solid #F5F7FB;">
+            <span style="font-size:13px;color:#525B7A;font-family:${FONT};">${ds} ${sch.startTime}</span>
+            <span style="display:flex;align-items:center;">${ico}</span>
+          </div>`;
+        }).join('');
+        const total = present + absent;
+        const pct = total > 0 ? Math.round(present / total * 100) : 0;
+        html += `<div style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div class="st" style="margin:0;">${monthLabel}</div>
+            <span style="font-size:13px;font-weight:700;color:${pct>=75?'#10B981':pct>=50?'#F59E0B':'#EF4444'};font-family:${FONT};">
+              ${pct}% (${present}/${total})
+            </span>
+          </div>
+          <div style="height:5px;background:#F3F4F6;border-radius:3px;overflow:hidden;margin-bottom:10px;">
+            <div style="width:${pct}%;height:100%;background:${pct>=75?'#10B981':pct>=50?'#F59E0B':'#EF4444'};border-radius:3px;"></div>
+          </div>
+          ${rows}
+        </div>`;
+      } catch(e) {
+        html += `<div style="margin-bottom:16px;"><div class="st">${monthLabel}</div><div style="font-size:13px;color:#EF4444;">Xatolik</div></div>`;
+      }
+    }
+    openModal(groupName + ' — Davomat', `<div style="font-size:13px;color:#8A93AD;margin-bottom:12px;font-family:${FONT};">${subjectName}</div>${html}`);
+  };
+
+  // ── Narx tarixi ──────────────────────────────────────────────────
+  window.showPriceHistory = async (studentId, studentName) => {
+    const hist = await G(`/students/${studentId}/price-history`);
+    const months = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+
+    function mLbl(my) {
+      if (!my) return '—';
+      const [y, m] = my.split('-');
+      return months[parseInt(m) - 1] + ' ' + y;
+    }
+
+    let html = '';
+    if (!hist.length) {
+      html = `<div style="text-align:center;padding:24px;color:#8A93AD;font-family:${FONT};">Narx tarixi yo'q</div>`;
+    } else {
+      hist.forEach(g => {
+        if (!g.months.length) return;
+        html += `
+          <div style="margin-bottom:16px;">
+            <div class="st">${g.groupName} — ${g.subjectName}</div>
+            <div style="background:#fff;border-radius:14px;border:1.5px solid #EAEDF3;overflow:hidden;">
+              ${g.months.map((m, i) => {
+                const bg = i % 2 === 0 ? '#fff' : '#FAFBFD';
+                const diffColor = m.diff >= 0 ? '#10B981' : '#EF4444';
+                return `
+                  <div style="display:flex;align-items:center;padding:10px 14px;
+                              border-bottom:1px solid #F2F4F8;background:${bg};">
+                    <div style="width:28px;height:28px;border-radius:8px;background:#EAF0FF;
+                                display:flex;align-items:center;justify-content:center;
+                                margin-right:10px;flex-shrink:0;">
+                      ${ICO.clock.replace('stroke="currentColor"','stroke="#2D5BFF"')}
+                    </div>
+                    <div style="flex:1;font-family:${FONT};">
+                      <div style="font-size:13px;font-weight:700;color:#0B1437;">${mLbl(m.month)}</div>
+                      <div style="font-size:11px;color:#8A93AD;margin-top:1px;">
+                        Narx: ${Number(m.price).toLocaleString('ru-RU')} so'm
+                      </div>
+                    </div>
+                    <div style="text-align:right;font-family:${FONT};">
+                      <div style="font-size:13px;font-weight:700;color:#10B981;">
+                        ${Number(m.paid).toLocaleString('ru-RU')} so'm
+                      </div>
+                      <div style="font-size:11px;font-weight:600;color:${diffColor};">
+                        ${m.diff >= 0 ? '+' : ''}${Number(m.diff).toLocaleString('ru-RU')}
+                      </div>
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+      });
+    }
+
+    openModal(`${studentName} — Narx tarixi`, html);
+  };
+
+  // ── O'quvchi profili ─────────────────────────────────────────────
+  window.openStudent = async id => {
+    const s = await G(`/students/${id}/profile`);
+    const a = s.applicant;
+    const edu = { school: 'Maktab', college: 'Kollej', adult: 'Katta yosh' }[a.educationType];
+    const bal = s.balanceInfo;
+    const balColor = bal?.balance >= 0 ? '#10B981' : '#EF4444';
+    const balBg    = bal?.balance >= 0 ? '#E6F8F0' : '#FCEDEC';
+    const balStr   = bal ? ((bal.balance >= 0 ? '+' : '') + Number(bal.balance).toLocaleString('ru-RU') + " so'm") : '—';
+
+    openModal(`${a.firstName} ${a.lastName}`, `
+      <!-- Shaxsiy ma'lumotlar -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F2F4F8;">
+          <span style="color:#8A93AD;font-size:14px;font-family:${FONT};">O'qish joyi</span>
+          <b style="font-family:${FONT};">${edu}${a.grade ? ' · ' + a.grade + '-sinf' : ''}</b>
+        </div>
+        ${a.phoneSelf ? `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F2F4F8;"><span style="color:#8A93AD;font-size:14px;font-family:${FONT};">O'zi</span><b style="font-family:${FONT};">${a.phoneSelf}</b></div>` : ''}
+        ${a.phoneFather ? `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F2F4F8;"><span style="color:#8A93AD;font-size:14px;font-family:${FONT};">Otasi</span><b style="font-family:${FONT};">${a.phoneFather}</b></div>` : ''}
+        ${a.phoneMother ? `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F2F4F8;"><span style="color:#8A93AD;font-size:14px;font-family:${FONT};">Onasi</span><b style="font-family:${FONT};">${a.phoneMother}</b></div>` : ''}
+      </div>
+
+      <!-- Balans -->
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  background:${balBg};border-radius:14px;padding:12px 14px;margin-bottom:16px;
+                  ${bal?.balance < 0 ? 'border:1.5px solid #FECACA;' : ''}">
+        <div style="display:flex;align-items:center;gap:8px;font-family:${FONT};">
+          ${ICO.wallet.replace('stroke="currentColor"',`stroke="${balColor}"`)}
+          <span style="font-size:13px;font-weight:700;color:${balColor};">Joriy Balans</span>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:${balColor};font-family:${FONT};">${balStr}</div>
+      </div>
+      ${bal?.balance < 0 ? `
+      <div style="background:#FCEDEC;border-radius:12px;padding:10px 14px;margin-bottom:12px;
+                  border:1px solid #FECACA;font-size:12px;font-weight:700;color:#EF4444;
+                  font-family:${FONT};">
+        Balans minus! O'quvchi ${Number(Math.abs(bal.balance)).toLocaleString('ru-RU')} so'm qarzdor.
+      </div>` : ''}
+
+      <!-- Guruhlar -->
+      <div class="st">GURUHLAR</div>
+      <div style="margin-bottom:16px;">
+        ${s.groupStudents.map(gs => `
+          <div style="display:flex;justify-content:space-between;align-items:center;
+                      padding:10px 0;border-bottom:1px solid #F2F4F8;">
+            <div>
+              <div style="font-size:14px;font-weight:700;font-family:${FONT};">${gs.group.name}</div>
+              <div style="font-size:12px;color:#8A93AD;font-family:${FONT};">${gs.group.subject.name}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;color:#B5BDD2;font-family:${FONT};">${new Date(gs.joinedAt).toLocaleDateString('uz-UZ')}</div>
+              <div style="font-size:11px;font-weight:700;color:${gs.status === 'active' ? '#10B981' : '#EF4444'};font-family:${FONT};">
+                ${gs.status === 'active' ? 'Faol' : 'Arxiv'}
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Davomat -->
+      <div class="st">DAVOMAT (oxirgi 3 oy)</div>
+      <div style="margin-bottom:12px;">
+        ${s.attendanceStats.filter(a => a.total > 0).length === 0
+          ? `<div style="color:#8A93AD;font-size:14px;text-align:center;padding:12px;font-family:${FONT};">Davomat ma'lumoti yo'q</div>`
+          : s.attendanceStats.filter(a => a.total > 0).map(a => `
+            <div style="padding:10px 0;border-bottom:1px solid #F2F4F8;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:14px;font-weight:700;font-family:${FONT};">${a.monthLabel}</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:13px;font-weight:700;color:${a.percent>=75?'#10B981':a.percent>=50?'#F59E0B':'#EF4444'};font-family:${FONT};">${a.percent}%</span>
+                  <span style="font-size:12px;color:#8A93AD;font-family:${FONT};">${a.present}/${a.total} dars</span>
+                </div>
+              </div>
+              <div style="height:5px;background:#F3F4F6;border-radius:3px;overflow:hidden;">
+                <div style="width:${a.percent}%;height:100%;background:${a.percent>=75?'#10B981':a.percent>=50?'#F59E0B':'#EF4444'};border-radius:3px;"></div>
+              </div>
+              ${a.absentList?.length > 0 ? `<div style="margin-top:5px;font-size:11px;color:#EF4444;font-family:${FONT};">Kelmagan: ${a.absentList.join(', ')}</div>` : ''}
+            </div>`).join('')}
+      </div>
+
+      <!-- Davomat jadvali tugmalar -->
+      <div style="margin-bottom:16px;">
+        ${s.groupStudents.filter(gs => gs.status === 'active').map(gs => `
+          <button onclick="showAttJadval(${s.id},${gs.groupId},'${gs.group.name}','${gs.group.subject.name}')"
+            style="width:100%;text-align:left;padding:10px 14px;border-radius:12px;
+                   border:1.5px solid #EAEDF3;background:#F8F9FC;cursor:pointer;
+                   font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between;
+                   align-items:center;font-family:${FONT};">
+            <span style="display:flex;align-items:center;gap:7px;">
+              ${ICO.tag.replace('stroke="currentColor"','stroke="#525B7A"')} ${gs.group.name} — ${gs.group.subject.name}
+            </span>
+            <span style="color:#2D5BFF;font-weight:700;">Jadval →</span>
+          </button>`).join('')}
+      </div>
+
+      <!-- Narx tarixi tugmasi -->
+      <button onclick="showPriceHistory(${s.id}, '${a.firstName} ${a.lastName}')"
+        style="width:100%;padding:11px;border-radius:12px;border:1.5px solid #EAEDF3;
+               background:#fff;font-size:13px;font-weight:700;cursor:pointer;
+               font-family:${FONT};display:flex;align-items:center;justify-content:center;
+               gap:7px;color:#525B7A;margin-bottom:12px;"
+        onmouseenter="this.style.background='#EAF0FF';this.style.borderColor='#2D5BFF';this.style.color='#2D5BFF';"
+        onmouseleave="this.style.background='#fff';this.style.borderColor='#EAEDF3';this.style.color='#525B7A';">
+        ${ICO.clock.replace('stroke="currentColor"','stroke="currentColor"')} Narx va To'lovlar tarixi
+      </button>
+
+      <!-- To'lovlar -->
+      <div class="st">TO'LOVLAR TARIXI (oxirgi 10)</div>
+      <div style="margin-bottom:16px;">
+        ${s.payments.length === 0
+          ? `<div style="color:#8A93AD;font-size:14px;text-align:center;padding:12px;font-family:${FONT};">To'lovlar yo'q</div>`
+          : s.payments.slice(0, 10).map(p => `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F2F4F8;">
+              <div>
+                <div style="font-size:14px;font-weight:700;font-family:${FONT};">${p.group?.subject?.name || ''} — ${(typeof mLabel === 'function') ? mLabel(p.monthYear) : p.monthYear}</div>
+                <div style="font-size:12px;color:#8A93AD;font-family:${FONT};">${new Date(p.createdAt).toLocaleDateString('uz-UZ')}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-weight:700;color:#2D5BFF;font-family:${FONT};">${Number(p.amount).toLocaleString('ru-RU')} so'm</div>
+                <div style="font-size:11px;color:#8A93AD;font-family:${FONT};">${p.paymentType === 'cash' ? 'Naqd' : 'Karta'}</div>
+              </div>
+            </div>`).join('')}
+      </div>
+
+      <!-- Arxivlash tugmasi (O'chirish emas!) -->
+      <div style="border-top:1.5px solid #EAEDF3;padding-top:14px;margin-top:4px;">
+        <button onclick="archiveStudent(${s.id}, '${a.firstName} ${a.lastName}')"
+          style="width:100%;padding:12px;border-radius:14px;border:1.5px solid #FECACA;
+                 background:#FCEDEC;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;
+                 font-family:${FONT};display:flex;align-items:center;justify-content:center;gap:7px;">
+          ${ICO.archive.replace('stroke="currentColor"','stroke="#EF4444"')} Barcha guruhlardan arxivlash
+        </button>
+        <div style="text-align:center;font-size:11px;color:#B5BDD2;margin-top:6px;font-family:${FONT};">
+          Arxivdan butunlay o'chirish "O'chirilganlar" bo'limida mavjud
+        </div>
+      </div>`);
+
+    // ── Arxivlash handler ────────────────────────────────────────────
+    window.archiveStudent = (sid, name) => {
+      openModal('Arxivlash', `
+        <div style="font-size:14px;color:#525B7A;margin-bottom:16px;font-family:${FONT};line-height:1.6;">
+          <b style="color:#0B1437;">${name}</b> ni barcha guruhlardan chiqarish va arxivlashni tasdiqlaysizmi?
+        </div>
+        <div style="background:#FEF4E0;border-radius:12px;padding:12px;margin-bottom:16px;
+                    border:1px solid #FCD34D;font-size:12px;color:#92400E;font-family:${FONT};">
+          ${ICO.archive.replace('width="16" height="16"','width="14" height="14"').replace('stroke="currentColor"','stroke="#92400E"')}
+          Arxivlangandan keyin o'quvchi faol guruhlardan chiqariladi. To'liq o'chirish uchun
+          "O'chirilganlar" bo'limiga o'ting.
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="closeModal()"
+            style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #EAEDF3;
+                   background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:${FONT};">
+            Bekor
+          </button>
+          <button onclick="doArchiveStudent(${sid})"
+            style="flex:2;padding:12px;border-radius:12px;border:none;background:#EF4444;
+                   color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:${FONT};">
+            Ha, arxivlash
+          </button>
+        </div>`);
+    };
+
+    window.doArchiveStudent = async sid => {
+      try {
+        await D(`/students/${sid}?action=archive`);
+        closeModal();
+        toast('✓ Arxivga o\'kazildi');
+        load();
+      } catch(e) { toast('✗ ' + e.message); }
+    };
+  };
+
+  load();
+}
+
+
+// ============ STAFF ============
+async function rStaff(el){
+  async function load(){
+    const[staff,subs]=await Promise.all([G('/staff'),G('/subjects')]);
+    el.innerHTML=`<button class="btn bp" style="margin-bottom:16px" onclick='openSF(null,${JSON.stringify(subs).replace(/"/g,"&quot;")})'>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Hodim qo'shish
+    </button>
+    ${staff.length===0?emHtml("Hodimlar yo'q"):`<div class="card" style="padding:0;overflow:hidden">${staff.map(s=>`
+      <div class="li" onclick='openSF(${JSON.stringify(s).replace(/"/g,"&quot;")},${JSON.stringify(subs).replace(/"/g,"&quot;")})'>
+        <div class="lic" style="background:${s.role==='teacher'?'#dbeafe':'#dcfce7'}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${s.role==='teacher'?'#1d4ed8':'#15803d'}" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500">${s.firstName} ${s.lastName}</div>
+        <div style="font-size:12px;color:#9ca3af">${s.role==='teacher'?"O'qituvchi":'Qabulxona'}${s.subject?' · '+s.subject:''}${s.phone?' · '+s.phone:''}</div></div>
+        <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${s.role==='teacher'?'#dbeafe':'#dcfce7'};color:${s.role==='teacher'?'#1d4ed8':'#15803d'}">${s.role==='teacher'?"O'qituvchi":'Qabulxona'}</span>
+      </div>`).join('')}</div>`}`;
+  }
+  window.openSF=(data,subs)=>{
+    if(typeof subs==='string')subs=JSON.parse(subs); if(data&&typeof data==='string')data=JSON.parse(data);
+    const isEdit=!!data;
+    openModal(isEdit?'Hodimni tahrirlash':"Hodim qo'shish",`
+      ${!isEdit?`<div class="ig"><label class="il">Telegram ID</label><input id="sf_tid" class="inp" placeholder="123456789"/></div>`:''}
+      <div class="ig"><label class="il">Rol</label><select id="sf_role" class="inp" onchange="sfRC()">
+        <option value="teacher" ${data?.role==='teacher'?'selected':''}>O'qituvchi</option>
+        <option value="receptionist" ${data?.role==='receptionist'?'selected':''}>Qabulxona</option>
+      </select></div>
+      <div class="ig"><label class="il">Ismi</label><input id="sf_fn" class="inp" value="${data?.firstName||''}"/></div>
+      <div class="ig"><label class="il">Familyasi</label><input id="sf_ln" class="inp" value="${data?.lastName||''}"/></div>
+      <div class="ig"><label class="il">Telefon</label><input id="sf_ph" class="inp" placeholder="+998..." value="${data?.phone||''}"/></div>
+      <div id="sf_sd" class="ig"><label class="il">Fan</label><select id="sf_sub" class="inp">${subs.map(s=>`<option value="${s.name}" ${data?.subject===s.name?'selected':''}>${s.name}</option>`).join('')}</select></div>
+      <button class="btn bp" onclick="saveSF(${isEdit?data.id:'null'})">✓ Saqlash</button>`);
+    sfRC();
+  };
+  window.sfRC=()=>{ const d=document.getElementById('sf_sd'); const r=document.getElementById('sf_role')?.value; if(d) d.style.display=r==='teacher'?'block':'none'; };
+  window.saveSF=async id=>{
+    const body={role:document.getElementById('sf_role').value,firstName:document.getElementById('sf_fn').value,lastName:document.getElementById('sf_ln').value,phone:document.getElementById('sf_ph').value,subject:document.getElementById('sf_sub')?.value||''};
+    if(!id) body.telegramId=document.getElementById('sf_tid').value;
+    try{ if(id) await U(`/staff/${id}`,body); else await P('/staff',body); closeModal(); toast('✅ Saqlandi'); load(); }
+    catch(e){ toast('❌ '+e.message); }
+  };
+  load();
+}
+
+
+
+// ============ SCHEDULE ============
+async function rSchedule(el) {
+
+  // ── Ranglar va yordamchilar ──────────────────────────────────────────
+  const SLOT_COLORS = [
+    { key: 1, main: '#2D5BFF', soft: '#EAF0FF', label: '1-Slot', cls: 'sel-1' },
+    { key: 2, main: '#10B981', soft: '#E6F8F0', label: '2-Slot', cls: 'sel-2' },
+    { key: 3, main: '#F59E0B', soft: '#FEF4E0', label: '3-Slot', cls: 'sel-3' },
+  ];
+  const DAY_UZ  = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
+  const MON_UZ  = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+  const FONT    = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  // ── Inline loader ────────────────────────────────────────────────────
+  function showLoader() { el.innerHTML = ldHtml ? ldHtml() : '<div style="padding:48px;text-align:center;color:#8A93AD">Yuklanmoqda...</div>'; }
+
+  // ── Orqaga tugmasi ───────────────────────────────────────────────────
+  // nav() funksiyasi mavjud: u curPage ni o'zgartiradi va rSchedule ni chaqiradi.
+  // Sub-ko'rinishlardan orqaga qaytish uchun rSchedule(el) ni qayta chaqiramiz —
+  // bu loadToday() ni ishga tushiradi. Navigatsiya holati saqlanadi.
+  function backBtn(label) {
+    return `<button onclick="rSchedule(document.getElementById('content'))"
+      style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;
+             border-radius:12px;border:1.5px solid #EAEDF3;background:#fff;
+             font-size:13px;font-weight:700;cursor:pointer;color:#525B7A;
+             font-family:${FONT};margin-bottom:16px;transition:all .15s;"
+      onmouseenter="this.style.background='#F5F7FB';this.style.borderColor='#2D5BFF';this.style.color='#2D5BFF';"
+      onmouseleave="this.style.background='#fff';this.style.borderColor='#EAEDF3';this.style.color='#525B7A';">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      ${label || 'Orqaga'}
+    </button>`;
+  }
+
+  // ── Hozirgi sanani YYYY-MM-DD formatda qaytaradi (local) ────────────
+  function todayStr() {
+    const n = new Date();
+    return n.getFullYear() + '-'
+      + String(n.getMonth() + 1).padStart(2, '0') + '-'
+      + String(n.getDate()).padStart(2, '0');
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // 1. ASOSIY KO'RINISH — Bugungi darslar
+  // ════════════════════════════════════════════════════════════════════
+  async function loadToday() {
+    showLoader();
+    try {
+      const today = await G('/schedule/today');
+      const td = todayStr();
+      const [y, m, d] = td.split('-');
+      const dateLabel = `${d}-${MON_UZ[parseInt(m) - 1]}, ${DAY_UZ[new Date(td).getDay() === 0 ? 6 : new Date(td).getDay() - 1]}`;
+
+      const todayHtml = today.length === 0
+        ? `<div style="background:#F8F9FC;border-radius:16px;padding:20px;text-align:center;
+                color:#8A93AD;font-size:13px;font-family:${FONT};margin-bottom:16px;">
+            Bugun dars yo'q
+           </div>`
+        : `<div class="sch-card" style="margin-bottom:16px;">${
+            today.map((s, i) => {
+              const sc = SLOT_COLORS[i % 3];
+              const teacherName = (s.group.teacher?.firstName || '') + ' ' + (s.group.teacher?.lastName || '');
+              return `
+                <div class="sch-day-row" style="cursor:default;">
+                  <div style="width:4px;align-self:stretch;border-radius:4px;background:${sc.main};flex-shrink:0;"></div>
+                  <div style="width:42px;height:42px;border-radius:13px;background:${sc.soft};
+                              display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${sc.main}" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:700;color:#0B1437;font-family:${FONT};">
+                      ${s.group.name}
+                    </div>
+                    <div style="font-size:12px;color:#8A93AD;font-family:${FONT};margin-top:2px;">
+                      ${s.group.subject.name}${teacherName.trim() ? ' · ' + teacherName.trim() : ''}
+                    </div>
+                  </div>
+                  <div style="font-size:13px;font-weight:700;color:${sc.main};font-family:${FONT};white-space:nowrap;">
+                    ${s.startTime}–${s.endTime}
+                  </div>
+                </div>`;
+            }).join('')
+          }</div>`;
+
+      el.innerHTML = `
+        <div style="padding:4px 0 16px;">
+          <!-- Sarlavha -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <div style="width:38px;height:38px;border-radius:12px;background:#EAF0FF;
+                        display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2D5BFF"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:#0B1437;font-family:${FONT};">Bugungi Darslar</div>
+              <div style="font-size:12px;color:#8A93AD;font-family:${FONT};">${dateLabel}</div>
+            </div>
+          </div>
+
+          ${todayHtml}
+
+          <!-- Amal tugmalari -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <button onclick="showWeekView()"
+              style="padding:13px;border-radius:14px;border:1.5px solid #EAEDF3;
+                     background:#fff;font-size:13px;font-weight:700;cursor:pointer;
+                     font-family:${FONT};color:#525B7A;display:flex;align-items:center;
+                     justify-content:center;gap:7px;transition:all .15s;"
+              onmouseenter="this.style.borderColor='#2D5BFF';this.style.color='#2D5BFF';this.style.background='#EAF0FF';"
+              onmouseleave="this.style.borderColor='#EAEDF3';this.style.color='#525B7A';this.style.background='#fff';">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Haftalik jadval
+            </button>
+            <button onclick="showScheduleEditor(false)"
+              style="padding:13px;border-radius:14px;border:none;
+                     background:#2D5BFF;font-size:13px;font-weight:700;cursor:pointer;
+                     font-family:${FONT};color:#fff;display:flex;align-items:center;
+                     justify-content:center;gap:7px;transition:all .15s;
+                     box-shadow:0 4px 12px rgba(45,91,255,.3);"
+              onmouseenter="this.style.background='#1A3FCE';"
+              onmouseleave="this.style.background='#2D5BFF';">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Jadval qo'shish / Tahrirlash
+            </button>
+          </div>
+        </div>`;
+
+      // Global funksiyalarni bog'laymiz
+      window.showWeekView    = showWeekView;
+      window.showScheduleEditor = showScheduleEditor;
+
+    } catch (e) {
+      el.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#8A93AD;font-family:${FONT};">
+        Xatolik: ${e.message}
+      </div>`;
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // 2. HAFTALIK JADVAL KO'RINISHI
+  // ════════════════════════════════════════════════════════════════════
+  async function showWeekView() {
+    showLoader();
+    try {
+      const week = await G('/schedule/week');
+
+      // Slotlarni guruhlaymiz: har bir guruhga rang beramiz
+      const groupColorMap = {};
+      let colorIdx = 0;
+
+      week.forEach(day => {
+        day.schedules.forEach(s => {
+          if (!groupColorMap[s.group.id]) {
+            groupColorMap[s.group.id] = SLOT_COLORS[colorIdx % 3];
+            colorIdx++;
+          }
+        });
+      });
+
+      const weekHtml = week.map(day => {
+        const hasScheds = day.schedules.length > 0;
+        const dateObj = new Date(day.date + 'T00:00:00');
+        const dayLabel = `${day.day} — ${dateObj.getDate()}-${MON_UZ[dateObj.getMonth()]}`;
+
+        if (!hasScheds) {
+          return `
+            <div class="sch-day-row" style="opacity:0.45;">
+              <div class="sch-day-badge" style="background:#F3F4F6;color:#9CA3AF;">
+                ${day.day}
+              </div>
+              <div style="font-size:13px;color:#D1D5DB;font-family:${FONT};padding:6px 0;">
+                Dars yo'q
+              </div>
+            </div>`;
+        }
+
+        return `
+          <div class="sch-day-row">
+            <div>
+              <div class="sch-day-badge" style="background:#EAF0FF;color:#2D5BFF;">
+                ${day.day}
+              </div>
+              <div style="font-size:10px;color:#B5BDD2;font-family:${FONT};text-align:center;margin-top:4px;">
+                ${dateObj.getDate()}-${MON_UZ[dateObj.getMonth()].slice(0,3)}
+              </div>
+            </div>
+            <div style="flex:1;display:flex;flex-wrap:wrap;gap:6px;padding:2px 0;">
+              ${day.schedules.map(s => {
+                const sc = groupColorMap[s.group.id] || SLOT_COLORS[0];
+                return `
+                  <div style="display:flex;align-items:center;gap:8px;background:${sc.soft};
+                              border-radius:12px;padding:8px 12px;border:1px solid ${sc.main}22;
+                              flex:1;min-width:0;">
+                    <div style="width:3px;height:32px;border-radius:2px;background:${sc.main};flex-shrink:0;"></div>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:13px;font-weight:700;color:#0B1437;font-family:${FONT};
+                                  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        ${s.group.name}
+                      </div>
+                      <div style="font-size:11px;color:${sc.main};font-weight:600;font-family:${FONT};">
+                        ${s.startTime}–${s.endTime}
+                      </div>
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+      }).join('');
+
+      el.innerHTML = `
+        <div style="padding:4px 0 16px;">
+          ${backBtn('Bugungi darslar')}
+          <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:0.6px;
+                      text-transform:uppercase;margin-bottom:10px;font-family:${FONT};">
+            Haftalik Jadval
+          </div>
+          <div class="sch-card">${weekHtml}</div>
+        </div>`;
+
+    } catch (e) {
+      el.innerHTML = backBtn() + `<div style="text-align:center;padding:40px;color:#8A93AD;">
+        Xatolik: ${e.message}
+      </div>`;
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // 3. JADVAL QO'SHISH / TAHRIRLASH (Birlashtirilgan)
+  // isEdit=false → "Jadval qo'shish" sarlavhasi
+  // isEdit=true  → "Jadval tahrirlash" sarlavhasi
+  // Funksionallik bir xil: fan → guruh → kalendar (multi-slot)
+  // ════════════════════════════════════════════════════════════════════
+  async function showScheduleEditor(isEdit) {
+    showLoader();
+    try {
+      const subs = await G('/subjects');
+
+      el.innerHTML = `
+        <div style="padding:4px 0 16px;">
+          ${backBtn('Jadval bo\'limi')}
+
+          <div style="font-size:16px;font-weight:800;color:#0B1437;font-family:${FONT};margin-bottom:18px;">
+            ${isEdit ? 'Jadval Tahrirlash' : "Jadval Qo'shish / Tahrirlash"}
+          </div>
+
+          <!-- Fan tanlash -->
+          <div class="ig">
+            <label class="il">Fan</label>
+            <select id="schSub" class="inp" onchange="schLoadGroups()">
+              <option value="">Fan tanlang</option>
+              ${subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Guruh tanlash (yashirin) -->
+          <div id="schGroupSec" style="display:none;" class="ig">
+            <label class="il">Guruh</label>
+            <select id="schGroup" class="inp" onchange="schLoadCalendar()">
+              <option value="">Guruh tanlang</option>
+            </select>
+          </div>
+
+          <!-- Kalendar (yashirin) -->
+          <div id="schCalArea"></div>
+        </div>`;
+
+      // ── Fan tanlanganda guruhlarni yuklash ─────────────────────────
+      window.schLoadGroups = async () => {
+        const sid = document.getElementById('schSub').value;
+        if (!sid) return;
+        const groups = await G(`/groups?subjectId=${sid}`);
+        const gSel = document.getElementById('schGroup');
+        gSel.innerHTML = '<option value="">Guruh tanlang</option>'
+          + groups.map(g => {
+            const t = g.teacher
+              ? `${g.teacher.firstName} ${g.teacher.lastName}`.trim()
+              : '';
+            return `<option value="${g.id}">${g.name}${t ? ' — ' + t : ''}</option>`;
+          }).join('');
+        document.getElementById('schGroupSec').style.display = 'block';
+        document.getElementById('schCalArea').innerHTML = '';
+      };
+
+      // ── Guruh tanlanganda multi-slot kalendarni yuklash ──────────
+      window.schLoadCalendar = async () => {
+        const gid = document.getElementById('schGroup').value;
+        if (!gid) return;
+        await renderMultiSlotCalendar(gid, document.getElementById('schCalArea'));
+      };
+
+    } catch (e) {
+      el.innerHTML = backBtn() + `<div style="text-align:center;padding:40px;color:#EF4444;">
+        Xatolik: ${e.message}
+      </div>`;
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // 4. MULTI-SLOT KALENDAR
+  //    Maksimal 3 ta slot (har biri alohida rang).
+  //    Har slot uchun mustaqil kun tanlash + vaqt kiritish.
+  //    Saqlashda barcha slotlar bitta POST da ketadi.
+  // ════════════════════════════════════════════════════════════════════
+  async function renderMultiSlotCalendar(gid, container) {
+    container.innerHTML = ldHtml ? ldHtml() : '';
+
+    // Joriy oy ma'lumotlarini olamiz
+    const now    = new Date();
+    let calYear  = now.getFullYear();
+    let calMonth = now.getMonth(); // 0-indexed
+
+    // Mavjud jadval — slot 1 bilan pre-fill qilamiz
+    let existingSchedules = [];
+    try {
+      const m = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+      existingSchedules = await G(`/schedule/group/${gid}?month=${m}`);
+    } catch (_) {}
+
+    // ── Slot holati ──────────────────────────────────────────────────
+    // slots[0] = 1-slot ma'lumoti, slots[1] = 2-slot, slots[2] = 3-slot
+    // { dates: Set<string>, startTime: string, endTime: string, active: bool }
+    const slots = [
+      {
+        dates:     new Set(existingSchedules.map(s => s.lessonDate.slice(0, 10))),
+        startTime: existingSchedules[0]?.startTime || '09:00',
+        endTime:   existingSchedules[0]?.endTime   || '10:30',
+        active:    true,
+      },
+      { dates: new Set(), startTime: '11:00', endTime: '12:30', active: false },
+      { dates: new Set(), startTime: '14:00', endTime: '15:30', active: false },
+    ];
+
+    let activeSlot = 0; // qaysi slot tahrir qilinmoqda (0-indexed)
+
+    // ── Kalendar chizish funksiyasi ───────────────────────────────────
+    function drawCalendar() {
+      const td       = todayStr();
+      const dim      = new Date(calYear, calMonth + 1, 0).getDate();
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const offset   = firstDay === 0 ? 6 : firstDay - 1; // Du=0
+
+      // Kunlar HTML
+      let cellsHtml = '';
+      for (let i = 0; i < offset; i++) cellsHtml += '<div></div>';
+
+      for (let d = 1; d <= dim; d++) {
+        const ds      = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isPast  = ds < td;
+        const isToday = ds === td;
+
+        // Qaysi slotlarda bu kun bor?
+        const inSlots = slots.map((sl, idx) => sl.dates.has(ds) ? idx : -1).filter(x => x >= 0);
+
+        // Asosiy CSS klassi
+        let cls = 'cald';
+        if (isPast) cls += ' past';
+        if (isToday && inSlots.length === 0) cls += ' td';
+
+        // Rangni asosiy tanlangan slotga qarab belgilaymiz
+        let mainSlotIdx = inSlots.includes(activeSlot) ? activeSlot : (inSlots[0] ?? -1);
+        if (mainSlotIdx >= 0) cls += ` sel-${mainSlotIdx + 1}`;
+
+        // Bir nechta slotda bor bo'lsa dot ko'rsatamiz
+        const dotsHtml = inSlots.length > 1
+          ? `<div class="cald-dot">${inSlots.map(i => `<span style="background:${SLOT_COLORS[i].main};"></span>`).join('')}</div>`
+          : '';
+
+        cellsHtml += `
+          <div class="${cls}" id="cd${ds.replace(/-/g, '')}"
+               data-ds="${ds}" onclick="schToggleDay('${ds}')">
+            ${d}${dotsHtml}
+          </div>`;
+      }
+
+      // Aktiv slot ob'ekti
+      const asl = slots[activeSlot];
+      const sc  = SLOT_COLORS[activeSlot];
+
+      // Slot tab tugmalari
+      let slotTabsHtml = '';
+      for (let i = 0; i < 3; i++) {
+        const sl = slots[i];
+        const sc2 = SLOT_COLORS[i];
+        if (i < 2 || sl.active) {
+          // Faol yoki birinchi 2 ta har doim ko'rinadi
+          slotTabsHtml += `
+            <div class="slot-tab ${i === activeSlot ? 'active-' + (i + 1) : 'inactive'}"
+                 onclick="schSwitchSlot(${i})">
+              <div style="font-size:11px;letter-spacing:0.3px;">${sc2.label}</div>
+              <div style="font-size:10px;margin-top:2px;opacity:0.75;">
+                ${sl.dates.size} kun
+              </div>
+              ${sl.active ? '' : '<div style="font-size:9px;opacity:0.5;">(bo\'sh)</div>'}
+            </div>`;
+        } else {
+          // 3-slot faqat "+ Slot qo'shish" tugmasi sifatida
+          slotTabsHtml += `
+            <div class="slot-tab add-slot" onclick="schAddSlot(${i})">
+              <div style="font-size:11px;">+ Slot</div>
+              <div style="font-size:10px;opacity:0.6;margin-top:2px;">qo'shish</div>
+            </div>`;
+        }
+      }
+
+      container.innerHTML = `
+        <!-- Slot tab paneli -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          ${slotTabsHtml}
+        </div>
+
+        <!-- Aktiv slot rangi haqida eslatma -->
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;
+                    border-radius:12px;background:${sc.soft};border:1px solid ${sc.main}33;
+                    margin-bottom:14px;font-family:${FONT};">
+          <div style="width:12px;height:12px;border-radius:50%;background:${sc.main};flex-shrink:0;"></div>
+          <div style="font-size:12px;font-weight:700;color:${sc.main};">
+            ${sc.label} uchun kunlarni tanlang — ular ${['ko\'k', 'yashil', 'sariq'][activeSlot]} rangda belgilanadi
+          </div>
+        </div>
+
+        <!-- Kalendar -->
+        <div style="background:#fff;border-radius:18px;border:1.5px solid #EAEDF3;
+                    padding:16px;margin-bottom:12px;">
+          <!-- Oy navigatsiyasi -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <button id="schPrev"
+              style="width:36px;height:36px;border-radius:50%;border:1.5px solid #EAEDF3;
+                     background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#525B7A"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+            </button>
+            <div style="text-align:center;">
+              <div style="font-weight:800;font-size:15px;color:#0B1437;font-family:${FONT};">
+                ${MON_UZ[calMonth]} ${calYear}
+              </div>
+              <div id="schCntLbl"
+                   style="font-size:12px;font-weight:700;color:${sc.main};margin-top:2px;font-family:${FONT};">
+                ${asl.dates.size} kun tanlandi
+              </div>
+            </div>
+            <button id="schNext"
+              style="width:36px;height:36px;border-radius:50%;border:1.5px solid #EAEDF3;
+                     background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#525B7A"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Hafta kunlari sarlavhasi -->
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px;">
+            ${DAY_UZ.map(d => `<div style="text-align:center;font-size:11px;font-weight:700;
+                                           color:#B5BDD2;font-family:${FONT};">${d}</div>`).join('')}
+          </div>
+
+          <!-- Kunlar -->
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">
+            ${cellsHtml}
+          </div>
+        </div>
+
+        <!-- Du-Ju / Tozalash tugmalari -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button onclick="schFillWeekdays()"
+            style="flex:1;padding:10px;border-radius:12px;
+                   border:1.5px solid ${sc.main};background:${sc.soft};
+                   color:${sc.main};font-size:13px;font-weight:700;
+                   cursor:pointer;font-family:${FONT};">
+            Du–Ju kunlari
+          </button>
+          <button onclick="schClearMonth()"
+            style="flex:1;padding:10px;border-radius:12px;
+                   border:1.5px solid #FECACA;background:#FFF5F5;
+                   color:#EF4444;font-size:13px;font-weight:700;
+                   cursor:pointer;font-family:${FONT};">
+            Bu oyni tozalash
+          </button>
+        </div>
+
+        <!-- Aktiv slot vaqti -->
+        <div style="background:#fff;border-radius:18px;border:1.5px solid #EAEDF3;
+                    padding:16px;margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:0.6px;
+                      text-transform:uppercase;margin-bottom:12px;font-family:${FONT};">
+            ${sc.label} Vaqti
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label class="il">Boshlanish</label>
+              <input type="time" id="schSt${activeSlot}" class="inp"
+                     value="${asl.startTime}"
+                     onchange="schUpdateTime(${activeSlot},'start',this.value)"/>
+            </div>
+            <div>
+              <label class="il">Tugash</label>
+              <input type="time" id="schEn${activeSlot}" class="inp"
+                     value="${asl.endTime}"
+                     onchange="schUpdateTime(${activeSlot},'end',this.value)"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Saqlash tugmasi -->
+        <button onclick="schSaveAll('${gid}')"
+          style="width:100%;padding:14px;border-radius:14px;border:none;
+                 background:#2D5BFF;color:#fff;font-size:15px;font-weight:700;
+                 cursor:pointer;font-family:${FONT};
+                 display:flex;align-items:center;justify-content:center;gap:8px;
+                 box-shadow:0 4px 14px rgba(45,91,255,.35);transition:background .15s;"
+          onmouseenter="this.style.background='#1A3FCE';"
+          onmouseleave="this.style.background='#2D5BFF';">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Barcha Jadvalni Saqlash
+        </button>
+
+        <!-- Jami kun hisobi (qisqacha) -->
+        <div style="text-align:center;padding:10px;font-size:12px;color:#8A93AD;font-family:${FONT};">
+          ${slots.filter(s => s.active).map((s, i) => `${SLOT_COLORS[i].label}: ${s.dates.size} kun`).join(' · ')}
+          · Jami: ${slots.reduce((acc, s) => acc + s.dates.size, 0)} kun
+        </div>`;
+
+      // ── Event handlerlar ─────────────────────────────────────────────
+      document.getElementById('schPrev')?.addEventListener('click', () => {
+        calMonth--;
+        if (calMonth < 0) { calMonth = 11; calYear--; }
+        loadMonthData();
+      });
+      document.getElementById('schNext')?.addEventListener('click', () => {
+        calMonth++;
+        if (calMonth > 11) { calMonth = 0; calYear++; }
+        loadMonthData();
+      });
+    }
+
+    // ── Oy o'zgarganda mavjud jadval ma'lumotlarini qayta yuklash ──────
+    async function loadMonthData() {
+      // Joriy slot uchun yangi oy ma'lumotini olamiz,
+      // lekin faqat 1-slot uchun existing dates ni yangilaymiz
+      try {
+        const m = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+        const ex = await G(`/schedule/group/${gid}?month=${m}`);
+        if (activeSlot === 0 && slots[0].dates.size === 0) {
+          ex.forEach(s => slots[0].dates.add(s.lessonDate.slice(0, 10)));
+        }
+      } catch (_) {}
+      drawCalendar();
+    }
+
+    // ── Kun toggle ────────────────────────────────────────────────────
+    window.schToggleDay = (ds) => {
+      const sl = slots[activeSlot];
+      if (sl.dates.has(ds)) {
+        sl.dates.delete(ds);
+      } else {
+        sl.dates.add(ds);
+      }
+      // Counter yangilash (full redraw qilmasdan)
+      const cntEl = document.getElementById('schCntLbl');
+      if (cntEl) cntEl.textContent = `${sl.dates.size} kun tanlandi`;
+
+      // Faqat shu kun cellini yangilash
+      const cell = document.getElementById('cd' + ds.replace(/-/g, ''));
+      if (cell) {
+        // Barcha sel-* klasslarini olib tashlaymiz
+        cell.classList.remove('sel', 'sel-1', 'sel-2', 'sel-3');
+
+        // Qaysi slotlarda bor?
+        const inSlots = slots.map((s, i) => s.dates.has(ds) ? i : -1).filter(x => x >= 0);
+        if (inSlots.length > 0) {
+          const mainIdx = inSlots.includes(activeSlot) ? activeSlot : inSlots[0];
+          cell.classList.add(`sel-${mainIdx + 1}`);
+        } else if (ds === todayStr()) {
+          cell.classList.add('td');
+        }
+
+        // Dotlarni yangilash
+        const oldDot = cell.querySelector('.cald-dot');
+        if (oldDot) oldDot.remove();
+        if (inSlots.length > 1) {
+          const dotDiv = document.createElement('div');
+          dotDiv.className = 'cald-dot';
+          inSlots.forEach(i => {
+            const sp = document.createElement('span');
+            sp.style.background = SLOT_COLORS[i].main;
+            dotDiv.appendChild(sp);
+          });
+          cell.appendChild(dotDiv);
+        }
+      }
+    };
+
+    // ── Slot almashtirish ─────────────────────────────────────────────
+    window.schSwitchSlot = (idx) => {
+      activeSlot = idx;
+      drawCalendar();
+    };
+
+    // ── 3-slotni qo'shish ─────────────────────────────────────────────
+    window.schAddSlot = (idx) => {
+      slots[idx].active = true;
+      activeSlot = idx;
+      drawCalendar();
+    };
+
+    // ── Vaqt yangilash ────────────────────────────────────────────────
+    window.schUpdateTime = (slotIdx, type, val) => {
+      if (type === 'start') slots[slotIdx].startTime = val;
+      else                  slots[slotIdx].endTime   = val;
+    };
+
+    // ── Du-Ju kunlari ─────────────────────────────────────────────────
+    window.schFillWeekdays = () => {
+      const td  = todayStr();
+      const dim = new Date(calYear, calMonth + 1, 0).getDate();
+      for (let d = 1; d <= dim; d++) {
+        const ds  = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dow = new Date(ds).getDay();
+        if (dow >= 1 && dow <= 5 && ds >= td) {
+          slots[activeSlot].dates.add(ds);
+        }
+      }
+      drawCalendar();
+    };
+
+    // ── Bu oyni tozalash ──────────────────────────────────────────────
+    window.schClearMonth = () => {
+      const prefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+      slots[activeSlot].dates.forEach(ds => {
+        if (ds.startsWith(prefix)) slots[activeSlot].dates.delete(ds);
+      });
+      drawCalendar();
+    };
+
+    // ── BARCHA SLOTLARNI SAQLASH ───────────────────────────────────────
+    // Har bir slot uchun alohida POST chaqiriladi.
+    // Slot 1 odatdagi vaqt bilan, Slot 2 va 3 o'z vaqti bilan.
+    window.schSaveAll = async (groupId) => {
+      const activeSlots = slots.filter(s => s.active && s.dates.size > 0);
+      if (activeSlots.length === 0) {
+        toast('Kamida bitta slot uchun kun tanlang');
+        return;
+      }
+
+      const saveBtn = container.querySelector('button[onclick^="schSaveAll"]');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saqlanmoqda...';
+        saveBtn.style.opacity = '0.7';
+      }
+
+      let savedCount = 0;
+      let errorMsg = '';
+
+      for (let i = 0; i < slots.length; i++) {
+        const sl = slots[i];
+        if (!sl.active || sl.dates.size === 0) continue;
+
+        const dates = [...sl.dates].sort();
+        try {
+          await P(`/schedule/group/${groupId}`, {
+            dates,
+            startTime: sl.startTime,
+            endTime:   sl.endTime,
+          });
+          savedCount += dates.length;
+        } catch (e) {
+          errorMsg = `${SLOT_COLORS[i].label}: ${e.message}`;
+        }
+      }
+
+      if (errorMsg) {
+        toast(`✗ Xatolik — ${errorMsg}`);
+      } else {
+        toast(`✓ ${savedCount} ta dars saqlandi`);
+        setTimeout(() => rSchedule(document.getElementById('content')), 700);
+      }
+    };
+
+    // ── Birinchi chizish ──────────────────────────────────────────────
+    drawCalendar();
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // ISHGA TUSHIRISH
+  // ════════════════════════════════════════════════════════════════════
+  loadToday();
+}
+// ════════════════════════════════════════════════════════════════════════
+// rSchedule FUNKSIYASI TUGADI
+// Keyingisi: // ============ SETTINGS ============
+// ════════════════════════════════════════════════════════════════════════
+
+
+// ============ SETTINGS ============
+async function rSettings(el) {
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  const ICO = {
+    channel: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.84a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+    calendar: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    subject: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
+    plus:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    trash:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+    save:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    info:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    play:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+  };
+
+  async function load() {
+    const [settings, subs] = await Promise.all([G('/settings'), G('/subjects')]);
+    const deductDay = settings.monthly_deduction_day || '';
+
+    el.innerHTML = `
+      <!-- 1. Kanal sozlamalari -->
+      <div style="font-size:14px;font-weight:800;color:#0B1437;margin-bottom:12px;
+                  display:flex;align-items:center;gap:8px;font-family:${FONT};">
+        ${ICO.channel} Kanal sozlamalari
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:20px;">
+        <div class="ig"><label class="il">Hisobot kanali ID</label>
+          <input id="set_report" class="inp" placeholder="-1001234567890" value="${settings.report_channel_id || ''}"/>
+        </div>
+        <div class="ig"><label class="il">Davomat kanali ID</label>
+          <input id="set_att" class="inp" placeholder="-1001234567891" value="${settings.attendance_channel_id || ''}"/>
+        </div>
+        <div class="ig" style="margin-bottom:0;"><label class="il">Qabul kanali ID</label>
+          <input id="set_app" class="inp" placeholder="-1001234567892" value="${settings.applicant_channel_id || ''}"/>
+        </div>
+      </div>
+      <button onclick="saveSettings()"
+        style="width:100%;padding:13px;border-radius:14px;border:none;background:#2D5BFF;
+               color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:${FONT};
+               display:flex;align-items:center;justify-content:center;gap:8px;
+               box-shadow:0 4px 12px rgba(45,91,255,.25);margin-bottom:24px;"
+        onmouseenter="this.style.background='#1A3FCE';"
+        onmouseleave="this.style.background='#2D5BFF';">
+        ${ICO.save} Kanal sozlamalarini saqlash
+      </button>
+
+      <!-- 2. Oylik narx yechish sanasi -->
+      <div style="font-size:14px;font-weight:800;color:#0B1437;margin-bottom:12px;
+                  display:flex;align-items:center;gap:8px;font-family:${FONT};">
+        ${ICO.calendar} Balansdan pul yechish sanasi
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:8px;">
+        <div class="ig">
+          <label class="il">Har oyning nechinchi sanasida yechisin?</label>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input id="set_deduct_day" type="number" min="1" max="28" class="inp"
+              style="font-size:20px;font-weight:800;text-align:center;max-width:120px;"
+              placeholder="1–28" value="${deductDay}"/>
+            <span style="font-size:13px;color:#8A93AD;font-family:${FONT};">-sanada</span>
+          </div>
+          <div id="deductPreview" style="font-size:12px;color:#8A93AD;margin-top:6px;font-family:${FONT};">
+            ${deductDay ? `Har oyning <b style="color:#2D5BFF;">${deductDay}-sanasida</b> o'quvchilar balansi avtomatik yechiladi` : 'Sana kiritilmagan — avtomatik yechish o\'chirilgan'}
+          </div>
+        </div>
+        <!-- Eslatma -->
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:12px;
+                    background:#EAF0FF;border-radius:12px;border:1px solid #BFD4FF;">
+          ${ICO.info.replace('stroke="currentColor"','stroke="#2D5BFF"')}
+          <div style="font-size:12px;color:#2D5BFF;line-height:1.6;font-family:${FONT};">
+            Tizim har kuni soat 00:05 da tekshiradi. Belgilangan sana kelganda, har bir faol
+            o'quvchining balansi o'sha guruh uchun belgilangan narxi bo'yicha kamaytiriladi.
+            <b>1–28</b> oralig'ida son kiriting (29–31 ba'zi oylarda bo'lmasligi mumkin).
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:24px;">
+        <button onclick="saveDeductDay()"
+          style="flex:1;padding:13px;border-radius:14px;border:none;background:#2D5BFF;
+                 color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:${FONT};
+                 display:flex;align-items:center;justify-content:center;gap:7px;"
+          onmouseenter="this.style.background='#1A3FCE';"
+          onmouseleave="this.style.background='#2D5BFF';">
+          ${ICO.save} Sanani saqlash
+        </button>
+        <button onclick="runDeductNow()"
+          style="padding:13px 16px;border-radius:14px;border:1.5px solid #EAEDF3;
+                 background:#fff;font-size:13px;font-weight:700;cursor:pointer;
+                 color:#525B7A;font-family:${FONT};display:flex;align-items:center;gap:6px;"
+          title="Hozir qo'lda ishlatish"
+          onmouseenter="this.style.background='#F5F7FB';"
+          onmouseleave="this.style.background='#fff';">
+          ${ICO.play} Hozir ishlatish
+        </button>
+      </div>
+
+      <!-- 3. Fanlar -->
+      <div style="font-size:14px;font-weight:800;color:#0B1437;margin-bottom:12px;
+                  display:flex;align-items:center;gap:8px;font-family:${FONT};">
+        ${ICO.subject} Fanlar
+      </div>
+      <button onclick="addSub()"
+        style="width:100%;padding:12px;border-radius:14px;border:1.5px solid #EAEDF3;
+               background:#fff;font-size:14px;font-weight:700;cursor:pointer;
+               font-family:${FONT};display:flex;align-items:center;justify-content:center;
+               gap:7px;color:#2D5BFF;margin-bottom:10px;"
+        onmouseenter="this.style.background='#EAF0FF';"
+        onmouseleave="this.style.background='#fff';">
+        ${ICO.plus} Fan qo'shish
+      </button>
+      <div class="card" style="padding:0;overflow:hidden;">
+        ${subs.length === 0
+          ? `<div style="padding:20px;text-align:center;color:#8A93AD;font-family:${FONT};">Fanlar yo'q</div>`
+          : subs.map(s => `
+            <div class="li">
+              <div style="width:38px;height:38px;border-radius:12px;background:#EAF0FF;
+                          display:flex;align-items:center;justify-content:center;
+                          flex-shrink:0;margin-right:12px;">
+                ${ICO.subject.replace('stroke="currentColor"','stroke="#2D5BFF"').replace('width="18" height="18"','width="16" height="16"')}
+              </div>
+              <div style="flex:1;font-weight:700;color:#0B1437;font-family:${FONT};">${s.name}</div>
+              <button class="btn bd bsm" onclick="delSub(${s.id})"
+                style="display:flex;align-items:center;gap:4px;">
+                ${ICO.trash.replace('stroke="currentColor"','stroke="#EF4444"')} O'chirish
+              </button>
+            </div>`).join('')}
+      </div>`;
+
+    // ── Event handlers ───────────────────────────────────────────────
+    window.saveSettings = async () => {
+      try {
+        await U('/settings', {
+          report_channel_id: document.getElementById('set_report').value,
+          attendance_channel_id: document.getElementById('set_att').value,
+          applicant_channel_id: document.getElementById('set_app').value
+        });
+        toast('✓ Kanal sozlamalari saqlandi');
+      } catch(e) { toast('✗ ' + e.message); }
+    };
+
+    // Sanani preview yangilash
+    document.getElementById('set_deduct_day')?.addEventListener('input', e => {
+      const v = parseInt(e.target.value);
+      const prev = document.getElementById('deductPreview');
+      if (prev) {
+        if (v >= 1 && v <= 28) {
+          prev.innerHTML = `Har oyning <b style="color:#2D5BFF;">${v}-sanasida</b> o'quvchilar balansi avtomatik yechiladi`;
+        } else if (e.target.value === '') {
+          prev.textContent = 'Sana kiritilmagan — avtomatik yechish o\'chirilgan';
+        } else {
+          prev.innerHTML = `<span style="color:#EF4444;">Sana 1–28 oralig'ida bo'lishi kerak</span>`;
+        }
+      }
+    });
+
+    window.saveDeductDay = async () => {
+      const v = document.getElementById('set_deduct_day')?.value;
+      const day = parseInt(v);
+      if (!v) {
+        // Sana o'chirildi
+        await U('/settings', { monthly_deduction_day: '' });
+        toast('✓ Avtomatik yechish o\'chirildi');
+        return;
+      }
+      if (isNaN(day) || day < 1 || day > 28) return toast('1–28 oralig\'idagi son kiriting');
+      try {
+        await U('/settings', { monthly_deduction_day: String(day) });
+        toast(`✓ Har oyning ${day}-sanasida avtomatik yechiladi`);
+        load();
+      } catch(e) { toast('✗ ' + e.message); }
+    };
+
+    window.runDeductNow = () => {
+      openModal('Hozir ishlatish', `
+        <div style="font-size:14px;color:#525B7A;margin-bottom:16px;font-family:${FONT};line-height:1.6;">
+          Bu tugma barcha faol o'quvchilar balanslari uchun joriy oyning narxini
+          <b>hozir</b> yechadi. Agar oylik narx yechish sanasi belgilangan bo'lsa ham,
+          bu qo'lda ishlatish uchun.
+        </div>
+        <div style="background:#FEF4E0;border-radius:12px;padding:12px;margin-bottom:16px;
+                    border:1px solid #FCD34D;font-size:12px;color:#92400E;font-family:${FONT};">
+          ⚠️ Bu amal qaytarib bo'lmaydi. Davom etishga ishonchingiz komilmi?
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="closeModal()"
+            style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #EAEDF3;
+                   background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:${FONT};">
+            Bekor
+          </button>
+          <button id="runDeductBtn" onclick="doRunDeduct()"
+            style="flex:2;padding:12px;border-radius:12px;border:none;background:#2D5BFF;
+                   color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:${FONT};">
+            Ha, hozir ishlatish
+          </button>
+        </div>`);
+    };
+
+    window.doRunDeduct = async () => {
+      const btn = document.getElementById('runDeductBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Ishlanmoqda...'; }
+      try {
+        const r = await P('/settings/run-deduction', {});
+        closeModal();
+        toast(`✓ ${r.processed || 0} ta balans yechildi`);
+      } catch(e) {
+        toast('✗ ' + e.message);
+        if (btn) { btn.disabled = false; btn.textContent = 'Ha, hozir ishlatish'; }
+      }
+    };
+
+    window.addSub = () => openModal("Fan qo'shish", `
+      <div class="ig"><label class="il">Fan nomi</label>
+        <input id="sn" class="inp" placeholder="Matematika" style="font-family:${FONT};"/>
+      </div>
+      <button class="btn bp" onclick="saveSb()" style="font-family:${FONT};">
+        ${ICO.save} Saqlash
+      </button>`);
+
+    window.saveSb = async () => {
+      const n = document.getElementById('sn')?.value.trim();
+      if (!n) return toast('Fan nomi kerak');
+      try { await P('/subjects', { name: n }); closeModal(); toast('✓ Saqlandi'); load(); }
+      catch(e) { toast('✗ ' + e.message); }
+    };
+
+    window.delSub = async id => {
+      if (!confirm('O\'chirishni tasdiqlaysizmi?')) return;
+      try { await D(`/subjects/${id}`); toast('O\'chirildi'); load(); }
+      catch(e) { toast('✗ ' + e.message); }
+    };
+  }
+
+  load();
+}
+
+
+// ============ DEBTORS ============
+async function rDebtors(el) {
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  // Oylar (hozirdan 3 oy orqaga + 1 oy oldinga)
+  function getMonths() {
+    const now = new Date(); const res = [];
+    for (let i = -3; i <= 1; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      res.push(k);
+    }
+    return res;
+  }
+  const months = getMonths();
+  let selMonth = (typeof nowMonth === 'function') ? nowMonth() : months[months.length - 2];
+  let lastData = [];
+
+  // ── SVG ikonlar ────────────────────────────────────────────────────
+  const ICO = {
+    alert: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    send: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+    sendAll: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+    ok: `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    phone: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.84a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+    tag: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+    tg: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2.5L2 9.5l7 2m12.5-9-7.5 19-4.5-7.5m12-11.5L9 11.5m0 0v7l3-3"/></svg>`,
+  };
+
+  function fmtSum(n) {
+    if (n === null || n === undefined) return '—';
+    return Number(n).toLocaleString('ru-RU') + " so'm";
+  }
+
+  // ── Asosiy layout ─────────────────────────────────────────────────
+  function drawMain() {
+    const monthHtml = months.map(m => `
+      <button class="mpb${m === selMonth ? ' on' : ''}" onclick="debtSelM('${m}')"
+        style="flex-shrink:0;padding:8px 16px;border-radius:22px;font-weight:700;font-family:${FONT};">
+        ${(typeof mLabel === 'function') ? mLabel(m) : m}
+      </button>`).join('');
+
+    el.innerHTML = `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;font-family:${FONT};">
+          Oy tanlang
+        </div>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;">${monthHtml}</div>
+      </div>
+
+      <button onclick="debtSearch()"
+        style="width:100%;padding:13px;border-radius:14px;border:none;background:#2D5BFF;
+               color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:${FONT};
+               display:flex;align-items:center;justify-content:center;gap:8px;
+               box-shadow:0 4px 12px rgba(45,91,255,.3);margin-bottom:16px;"
+        onmouseenter="this.style.background='#1A3FCE';"
+        onmouseleave="this.style.background='#2D5BFF';">
+        ${ICO.alert.replace('currentColor','#fff').replace('width="20" height="20"','width="18" height="18"')}
+        Ko'rish
+      </button>
+
+      <div id="debtResult"></div>`;
+
+    window.debtSelM = m => {
+      selMonth = m;
+      document.querySelectorAll('.mpb').forEach(b => {
+        const bm = b.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        if (bm) {
+          b.classList.toggle('on', bm === m);
+          b.style.background = bm === m ? '#2D5BFF' : '#fff';
+          b.style.color = bm === m ? '#fff' : '#525B7A';
+          b.style.borderColor = bm === m ? '#2D5BFF' : '#EAEDF3';
+        }
+      });
+    };
+
+    window.debtSearch = async () => {
+      const res = document.getElementById('debtResult');
+      res.innerHTML = (typeof ldHtml === 'function') ? ldHtml() : 'Yuklanmoqda...';
+      try {
+        const data = await G(`/debtors?monthYear=${selMonth}`);
+        lastData = data;
+        renderResults(data, res);
+      } catch(e) {
+        res.innerHTML = `<div style="text-align:center;padding:32px;color:#EF4444;font-family:${FONT};">Xatolik: ${e.message}</div>`;
+      }
+    };
+  }
+
+  // ── Natijalarni render qilish ─────────────────────────────────────
+  function renderResults(data, res) {
+    const mLbl = (typeof mLabel === 'function') ? mLabel(selMonth) : selMonth;
+
+    if (!data.length) {
+      res.innerHTML = `
+        <div style="text-align:center;padding:48px 20px;font-family:${FONT};">
+          ${ICO.ok}
+          <div style="font-size:16px;font-weight:700;color:#10B981;margin-top:14px;">Qarzdorlar yo'q!</div>
+          <div style="font-size:13px;color:#8A93AD;margin-top:6px;">${mLbl} uchun hamma to'lov qilgan</div>
+        </div>`;
+      return;
+    }
+
+    // Jami qarzdorlar
+    const totalStudents = data.reduce((s, g) => s + g.students.length, 0);
+    const totalDebt = data.reduce((s, g) => s + (g.totalDebt || 0), 0);
+
+    let html = `
+      <!-- Umumiy statistika -->
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <div style="flex:1;background:#FCEDEC;border-radius:14px;padding:12px 14px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:#EF4444;font-family:${FONT};">${totalStudents}</div>
+          <div style="font-size:11px;color:#EF4444;font-weight:700;margin-top:2px;">Qarzdor</div>
+        </div>
+        <div style="flex:1;background:#FEF4E0;border-radius:14px;padding:12px 14px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:#F59E0B;font-family:${FONT};">${data.length}</div>
+          <div style="font-size:11px;color:#F59E0B;font-weight:700;margin-top:2px;">Guruh</div>
+        </div>
+        ${totalDebt > 0 ? `
+        <div style="flex:1;background:#F0EAFE;border-radius:14px;padding:12px 14px;text-align:center;">
+          <div style="font-size:15px;font-weight:800;color:#8056F5;font-family:${FONT};line-height:1.2;">${fmtSum(totalDebt)}</div>
+          <div style="font-size:11px;color:#8056F5;font-weight:700;margin-top:2px;">Jami qarz</div>
+        </div>` : ''}
+      </div>`;
+
+    data.forEach(g => {
+      const hasTelegram = g.students.filter(s => s.hasTelegram).length;
+      html += `
+        <div style="margin-bottom:18px;">
+          <!-- Guruh sarlavhasi -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#0B1437;font-family:${FONT};">
+                ${g.groupName}
+              </div>
+              <div style="font-size:11px;color:#8A93AD;font-weight:700;margin-top:1px;">
+                ${g.subjectName}${g.teacherName ? ' · ' + g.teacherName : ''} · ${g.students.length} ta qarzdor
+              </div>
+            </div>
+            ${g.totalDebt > 0 ? `
+            <div style="background:#FCEDEC;border-radius:10px;padding:5px 10px;text-align:right;">
+              <div style="font-size:12px;font-weight:800;color:#EF4444;font-family:${FONT};">${fmtSum(g.totalDebt)}</div>
+              <div style="font-size:9.5px;color:#EF4444;font-weight:700;">jami qarz</div>
+            </div>` : ''}
+          </div>
+
+          <!-- O'quvchilar ro'yxati -->
+          <div style="background:#fff;border-radius:18px;border:1.5px solid #EAEDF3;overflow:hidden;margin-bottom:8px;">
+            ${g.students.map((s, i) => {
+              const rowBg = i % 2 === 0 ? '#fff' : '#FAFBFD';
+              const phone = s.phoneSelf || s.phoneFather || s.phoneMother || '';
+
+              // To'lov holati
+              let statusHtml = '';
+              if (s.noPay) {
+                statusHtml = `<div style="font-size:11px;font-weight:700;color:#EF4444;background:#FCEDEC;
+                                          padding:3px 8px;border-radius:8px;white-space:nowrap;">To'lovsiz</div>`;
+              } else if (s.remainingAmount) {
+                statusHtml = `<div style="font-size:11px;font-weight:700;color:#F59E0B;background:#FEF4E0;
+                                          padding:3px 8px;border-radius:8px;white-space:nowrap;">Qisman</div>`;
+              }
+
+              return `
+                <div style="display:flex;align-items:center;padding:12px 14px;
+                            border-bottom:1px solid #F2F4F8;background:${rowBg};">
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:700;color:#0B1437;font-family:${FONT};
+                                display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                      ${s.firstName} ${s.lastName}
+                      ${s.hasTelegram ? `<span style="color:#2D5BFF;">${ICO.tg}</span>` : ''}
+                    </div>
+                    ${phone ? `
+                    <div style="font-size:11.5px;color:#8A93AD;margin-top:2px;
+                                display:flex;align-items:center;gap:3px;">
+                      ${ICO.phone} ${phone}
+                    </div>` : ''}
+                    ${s.targetAmount ? `
+                    <div style="font-size:11px;color:#8A93AD;margin-top:3px;
+                                display:flex;align-items:center;gap:3px;">
+                      ${ICO.tag}
+                      Narx: ${fmtSum(s.targetAmount)} · To'lagan: ${fmtSum(s.paidAmount)}
+                    </div>` : `
+                    <div style="font-size:11px;color:#EF4444;margin-top:3px;font-weight:600;">
+                      To'lagan: ${fmtSum(s.paidAmount)}
+                    </div>`}
+                    ${s.remainingAmount ? `
+                    <div style="font-size:11.5px;color:#EF4444;font-weight:800;margin-top:3px;">
+                      Qoldiq: ${fmtSum(s.remainingAmount)}
+                    </div>` : ''}
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:8px;">
+                    ${statusHtml}
+                    <!-- Shaxsiy xabar tugmasi -->
+                    ${s.hasTelegram ? `
+                    <button onclick="debtSendOne(${s.studentId}, ${g.groupId}, '${selMonth}', ${s.remainingAmount || 0})"
+                      style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;
+                             border-radius:9px;border:1.5px solid #EAEDF3;background:#fff;
+                             font-size:11px;font-weight:700;cursor:pointer;color:#525B7A;
+                             font-family:${FONT};white-space:nowrap;"
+                      title="Shaxsiy xabar yuborish"
+                      onmouseenter="this.style.background='#EAF0FF';this.style.borderColor='#2D5BFF';this.style.color='#2D5BFF';"
+                      onmouseleave="this.style.background='#fff';this.style.borderColor='#EAEDF3';this.style.color='#525B7A';">
+                      ${ICO.send} Xabar
+                    </button>` : ''}
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>
+
+          <!-- Guruhga ommaviy xabar -->
+          ${hasTelegram > 0 ? `
+          <button onclick="debtNotifyGroup(${g.groupId}, '${g.groupName}', ${hasTelegram})"
+            style="width:100%;padding:11px;border-radius:12px;border:1.5px solid #EAEDF3;
+                   background:#fff;font-size:13px;font-weight:700;cursor:pointer;
+                   color:#525B7A;font-family:${FONT};display:flex;align-items:center;
+                   justify-content:center;gap:7px;"
+            onmouseenter="this.style.background='#EAF0FF';this.style.borderColor='#2D5BFF';this.style.color='#2D5BFF';"
+            onmouseleave="this.style.background='#fff';this.style.borderColor='#EAEDF3';this.style.color='#525B7A';">
+            ${ICO.sendAll}
+            Guruhga xabar yuborish (${hasTelegram} ta)
+          </button>` : `
+          <div style="text-align:center;padding:8px;font-size:11px;color:#B5BDD2;font-family:${FONT};">
+            Bu guruhda botga ulangan o'quvchilar yo'q
+          </div>`}
+        </div>`;
+    });
+
+    res.innerHTML = html;
+
+    // ── Shaxsiy xabar ───────────────────────────────────────────────
+    window.debtSendOne = async (studentId, groupId, monthYear, remainingAmount) => {
+      const mLbl2 = (typeof mLabel === 'function') ? mLabel(monthYear) : monthYear;
+      const grp = lastData.find(g => g.groupId === groupId);
+      const stu = grp?.students.find(s => s.studentId === studentId);
+      if (!stu) return;
+
+      openModal('Xabar yuborish', `
+        <div style="background:#F8F9FC;border-radius:14px;padding:14px;margin-bottom:16px;
+                    border:1px solid #EAEDF3;font-family:${FONT};">
+          <div style="font-size:13px;font-weight:700;color:#0B1437;margin-bottom:4px;">
+            ${stu.firstName} ${stu.lastName}
+          </div>
+          <div style="font-size:12px;color:#8A93AD;">${grp.groupName} · ${mLbl2}</div>
+          ${stu.remainingAmount ? `<div style="font-size:13px;font-weight:700;color:#EF4444;margin-top:6px;">
+            Qoldiq: ${fmtSum(stu.remainingAmount)}</div>` : ''}
+        </div>
+        <div style="font-size:13px;color:#8A93AD;margin-bottom:16px;font-family:${FONT};">
+          O'quvchining Telegram ilovasiga to'lov eslatmasi yuboriladi.
+        </div>
+        <button id="debtSendOneBtn" onclick="debtSendOneConfirm(${studentId}, ${groupId}, '${monthYear}', ${remainingAmount})"
+          style="width:100%;padding:14px;border-radius:14px;border:none;background:#2D5BFF;
+                 color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:${FONT};
+                 display:flex;align-items:center;justify-content:center;gap:8px;
+                 box-shadow:0 4px 12px rgba(45,91,255,.3);">
+          ${ICO.send.replace('currentColor','#fff')} Xabar yuborish
+        </button>`);
+    };
+
+    window.debtSendOneConfirm = async (studentId, groupId, monthYear, remainingAmount) => {
+      const btn = document.getElementById('debtSendOneBtn');
+      if (btn) { btn.disabled = true; btn.innerHTML = 'Yuborilmoqda...'; }
+      try {
+        await P('/notifications/debt', {
+          studentId: parseInt(studentId),
+          groupId: parseInt(groupId),
+          monthYear,
+          remainingAmount: remainingAmount || null
+        });
+        closeModal();
+        toast('✓ Xabar yuborildi');
+      } catch(e) {
+        toast('✗ ' + e.message);
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Xabar yuborish'; }
+      }
+    };
+
+    // ── Guruhga ommaviy xabar ────────────────────────────────────────
+    window.debtNotifyGroup = (groupId, groupName, hasTg) => {
+      const mLbl3 = (typeof mLabel === 'function') ? mLabel(selMonth) : selMonth;
+      const grp = lastData.find(g => g.groupId === groupId);
+      const debtorNames = (grp?.students || []).map(s =>
+        `${s.firstName} ${s.lastName}${s.remainingAmount ? ' — ' + fmtSum(s.remainingAmount) : ''}`
+      ).join('\n');
+
+      openModal('Guruhga xabar yuborish', `
+        <div style="background:#F8F9FC;border-radius:14px;padding:14px;margin-bottom:12px;
+                    border:1px solid #EAEDF3;font-family:${FONT};">
+          <div style="font-size:13px;font-weight:700;color:#0B1437;margin-bottom:4px;">
+            ${groupName} — ${mLbl3}
+          </div>
+          <div style="font-size:12px;color:#8A93AD;">${hasTg} ta botga ulangan o'quvchi</div>
+        </div>
+        <div style="background:#F3F4F6;border-radius:12px;padding:13px;max-height:180px;
+                    overflow-y:auto;font-size:12px;color:#525B7A;white-space:pre-line;
+                    font-family:${FONT};line-height:1.6;margin-bottom:16px;">
+          ${debtorNames || 'Ro\'yxat bo\'sh'}
+        </div>
+        <div style="font-size:12px;color:#8A93AD;margin-bottom:16px;font-family:${FONT};">
+          Har bir o'quvchiga shaxsiy Telegram xabari yuboriladi.
+        </div>
+        <button id="debtGroupBtn" onclick="debtNotifyGroupConfirm(${groupId})"
+          style="width:100%;padding:14px;border-radius:14px;border:none;background:#2D5BFF;
+                 color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:${FONT};
+                 display:flex;align-items:center;justify-content:center;gap:8px;
+                 box-shadow:0 4px 12px rgba(45,91,255,.3);">
+          ${ICO.sendAll.replace('currentColor','#fff')} Hammaga xabar yuborish
+        </button>`);
+    };
+
+    window.debtNotifyGroupConfirm = async (groupId) => {
+      const btn = document.getElementById('debtGroupBtn');
+      if (btn) { btn.disabled = true; btn.innerHTML = 'Yuborilmoqda...'; }
+      try {
+        const r = await P('/debtors/notify', { groupId: parseInt(groupId), monthYear: selMonth });
+        closeModal();
+        const info = r.noTelegram > 0
+          ? `✓ ${r.sent} ta yuborildi, ${r.noTelegram} ta botga ulanmagan`
+          : `✓ ${r.sent} ta xabar yuborildi`;
+        toast(info, 3500);
+      } catch(e) {
+        toast('✗ ' + e.message);
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Hammaga xabar yuborish'; }
+      }
+    };
+  }
+
+  drawMain();
+}
+// ════════════════════════════════════════════════════════════════════════
+// rDebtors FUNKSIYASI TUGADI
+// ════════════════════════════════════════════════════════════════════════
+
+
+// ============ ATTENDANCE ============
+async function rAttendance(el) {
+
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+  const MON_UZ = ['Yanvar','Fevral','Mart','Aprel','May','Iyun',
+                  'Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+
+  // Bugungi sana YYYY-MM-DD formatda (local)
+  function todayStr() {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  }
+
+  // Oyning so'nggi N oyi
+  function getMonths() {
+    const now = new Date(); const res = [];
+    for (let i = -3; i <= 0; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      res.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    }
+    return res;
+  }
+
+  const months = getMonths();
+  let selMonth = nowMonth ? nowMonth() : months[months.length - 1];
+  let selGroupId = null;
+  let groups = [];
+
+  // ── Guruhlarni yuklash ──────────────────────────────────────────────
+  async function loadGroups() {
+    groups = await G('/groups');
+    drawMain();
+  }
+
+  // ── Asosiy ko'rinish: oy + guruh tanlash ───────────────────────────
+  function drawMain() {
+    const monthHtml = months.map(m => `
+      <div class="mpb${m === selMonth ? ' on' : ''}"
+           onclick="attSetMonth('${m}')"
+           style="font-weight:700;${m === selMonth
+             ? 'background:#2D5BFF;color:#fff;border-color:#2D5BFF;box-shadow:0 3px 10px rgba(45,91,255,.3);'
+             : 'background:#fff;color:#525B7A;'}">
+        ${mLabel(m)}
+      </div>`).join('');
+
+    const groupHtml = groups.length === 0
+      ? `<div style="padding:20px;text-align:center;color:#8A93AD;font-family:${FONT};">
+           Guruhlar yo'q
+         </div>`
+      : groups.map(g => `
+          <div class="li" id="attg${g.id}" onclick="attSetGroup(${g.id})"
+               style="transition:background .1s;">
+            <div class="lic" style="background:#EAF0FF;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2D5BFF"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:600;color:#0B1437;font-family:${FONT};">
+                ${g.name}
+              </div>
+              <div style="font-size:12px;color:#8A93AD;font-family:${FONT};margin-top:2px;">
+                ${g.subject?.name || ''} · ${g.teacher ? g.teacher.firstName + ' ' + g.teacher.lastName : '—'}
+                · ${g._count?.groupStudents || 0} o'quvchi
+              </div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </div>`).join('');
+
+    el.innerHTML = `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:0.6px;
+                    text-transform:uppercase;margin-bottom:10px;font-family:${FONT};">
+          Oy tanlang
+        </div>
+        <div class="mp">${monthHtml}</div>
+      </div>
+      <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:0.6px;
+                  text-transform:uppercase;margin-bottom:10px;font-family:${FONT};">
+        Guruh tanlang
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px;">
+        ${groupHtml}
+      </div>
+      <div id="attResult"></div>`;
+
+    // Agar guruh oldin tanlangan bo'lsa — qayta highlight
+    if (selGroupId) {
+      const li = document.getElementById('attg' + selGroupId);
+      if (li) li.style.background = '#EFF6FF';
+    }
+
+    window.attSetMonth = m => {
+      selMonth = m;
+      // Oy tugmalarini yangilash
+      months.forEach(mn => {
+        const btn = document.querySelector(`[onclick="attSetMonth('${mn}')"]`);
+        if (btn) {
+          btn.className = 'mpb' + (mn === m ? ' on' : '');
+          btn.style.cssText = mn === m
+            ? 'font-weight:700;background:#2D5BFF;color:#fff;border-color:#2D5BFF;box-shadow:0 3px 10px rgba(45,91,255,.3);'
+            : 'font-weight:700;background:#fff;color:#525B7A;';
+        }
+      });
+      if (selGroupId) loadAttTable(selGroupId);
+    };
+
+    window.attSetGroup = gid => {
+      selGroupId = gid;
+      // Highlight
+      document.querySelectorAll('[id^="attg"]').forEach(li => {
+        li.style.background = li.id === 'attg' + gid ? '#EFF6FF' : '';
+      });
+      loadAttTable(gid);
+    };
+  }
+
+  // ── Davomat jadvalini yuklash ───────────────────────────────────────
+  async function loadAttTable(gid) {
+    const res = document.getElementById('attResult');
+    if (!res) return;
+    res.innerHTML = ldHtml ? ldHtml() : '';
+    try {
+      const [students, schedules] = await Promise.all([
+        G('/groups/' + gid + '/students'),
+        G('/schedule/group/' + gid + '?month=' + selMonth)
+      ]);
+
+      if (!students.length) {
+        res.innerHTML = emHtml ? emHtml("Bu guruhda o'quvchilar yo'q") : '';
+        return;
+      }
+      if (!schedules.length) {
+        res.innerHTML = `
+          <div style="background:#F8F9FC;border-radius:16px;padding:20px;
+                      text-align:center;color:#8A93AD;font-family:${FONT};">
+            ${mLabel(selMonth)} oyida dars belgilanmagan
+          </div>`;
+        return;
+      }
+
+      const td = todayStr();
+
+      // Har o'quvchi uchun davomat
+      const attAll = await Promise.all(
+        students.map(s =>
+          G('/attendance/student/' + s.id + '?groupId=' + gid + '&month=' + selMonth)
+            .catch(() => [])
+        )
+      );
+
+      // scheduleId → { lessonDate, isEditable }
+      const schedMap = {};
+      schedules.forEach(s => {
+        const ds = new Date(s.lessonDate).toISOString().slice(0, 10);
+        schedMap[s.id] = { ds, editable: ds <= td };
+      });
+
+      // Ustun sarlavhalari
+      const dateLabels = schedules.map(s => {
+        const d = new Date(s.lessonDate);
+        const ds = d.toISOString().slice(0, 10);
+        const isPast = ds <= td;
+        return {
+          label: String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0'),
+          scheduleId: s.id,
+          editable: isPast,
+          ds
+        };
+      });
+
+      // ── Jadval HTML ────────────────────────────────────────────────
+      let html = `
+        <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:0.6px;
+                    text-transform:uppercase;margin-bottom:10px;font-family:${FONT};">
+          ${mLabel(selMonth)} — Davomat Jadvali
+        </div>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:16px;
+                    border:1.5px solid #EAEDF3;background:#fff;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;
+                        min-width:${100 + schedules.length * 42}px;font-family:${FONT};">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:12px 14px;background:#F8F9FC;
+                           border-bottom:2px solid #EAEDF3;font-weight:800;color:#0B1437;
+                           position:sticky;left:0;z-index:2;min-width:130px;">
+                  O'quvchi
+                </th>
+                ${dateLabels.map(dl => `
+                  <th style="padding:8px 4px;background:${dl.editable ? '#F8F9FC' : '#FFF8E8'};
+                             border-bottom:2px solid #EAEDF3;font-weight:700;
+                             color:${dl.editable ? '#525B7A' : '#B5BDD2'};
+                             text-align:center;width:42px;font-size:11px;"
+                      title="${dl.editable ? 'Davomat olish mumkin' : 'Kelajak — davomat olib bo\'lmaydi'}">
+                    ${dl.label}
+                    ${dl.editable ? '' : '<div style="font-size:8px;color:#D1D5DB;">🔒</div>'}
+                  </th>`).join('')}
+                <th style="padding:8px 10px;background:#F8F9FC;border-bottom:2px solid #EAEDF3;
+                           font-weight:800;color:#0B1437;text-align:center;min-width:70px;">
+                  Jami
+                </th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+      students.forEach((s, si) => {
+        const attMap = {};
+        (attAll[si] || []).forEach(a => { attMap[a.scheduleId] = a.isPresent; });
+
+        let present = 0, total = 0;
+        const cells = schedules.map((sch, idx) => {
+          const dl = dateLabels[idx];
+          const ip = attMap[sch.id];
+
+          if (dl.editable) total++;
+          if (ip === true && dl.editable) present++;
+
+          if (!dl.editable) {
+            return `<td style="text-align:center;padding:4px;background:#FFFDF0;">
+              <span style="color:#E5E7EB;font-size:12px;">—</span>
+            </td>`;
+          }
+          if (ip === true) return `
+            <td style="text-align:center;padding:4px;cursor:pointer;"
+                onclick="attEditDay(${sch.id}, ${s.id}, '${s.firstName} ${s.lastName}', ${gid})"
+                title="Tahrirlash uchun bosing">
+              <span style="color:#10B981;font-weight:800;font-size:16px;
+                           display:block;line-height:1;transition:transform .1s;"
+                    onmouseenter="this.style.transform='scale(1.2)'"
+                    onmouseleave="this.style.transform='scale(1)'">✓</span>
+            </td>`;
+          if (ip === false) return `
+            <td style="text-align:center;padding:4px;cursor:pointer;"
+                onclick="attEditDay(${sch.id}, ${s.id}, '${s.firstName} ${s.lastName}', ${gid})"
+                title="Tahrirlash uchun bosing">
+              <span style="color:#EF4444;font-weight:800;font-size:16px;
+                           display:block;line-height:1;transition:transform .1s;"
+                    onmouseenter="this.style.transform='scale(1.2)'"
+                    onmouseleave="this.style.transform='scale(1)'">✗</span>
+            </td>`;
+          // Davomat olinmagan — bosilsa davomat olinadi
+          return `
+            <td style="text-align:center;padding:4px;cursor:pointer;"
+                onclick="attTakeDay(${sch.id}, '${dl.ds}', ${gid})"
+                title="Davomat olish">
+              <span style="color:#D1D5DB;font-size:14px;display:block;line-height:1;
+                           transition:color .12s;"
+                    onmouseenter="this.style.color='#8A93AD'"
+                    onmouseleave="this.style.color='#D1D5DB'">—</span>
+            </td>`;
+        }).join('');
+
+        const pct = total > 0 ? Math.round(present / total * 100) : null;
+        const pctColor = pct === null ? '#B5BDD2' : pct >= 75 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#EF4444';
+        const rowBg = si % 2 === 0 ? '#fff' : '#FAFBFD';
+
+        html += `
+          <tr style="border-bottom:1px solid #F2F4F8;background:${rowBg};">
+            <td style="padding:10px 14px;font-weight:600;color:#0B1437;
+                       position:sticky;left:0;z-index:1;background:${rowBg};">
+              ${s.firstName} ${s.lastName}
+            </td>
+            ${cells}
+            <td style="text-align:center;padding:8px 4px;">
+              ${pct !== null
+                ? `<b style="color:${pctColor};font-size:13px;">${pct}%</b>
+                   <div style="font-size:10px;color:#B5BDD2;">${present}/${total}</div>`
+                : `<span style="color:#D1D5DB;font-size:12px;">—</span>`
+              }
+            </td>
+          </tr>`;
+      });
+
+      html += `</tbody></table></div>`;
+
+      // ── Davomat olish tugmasi ────────────────────────────────────────
+      html += `
+        <div style="margin-top:14px;display:flex;gap:10px;">
+          <button onclick="attTakeAll(${gid})"
+            style="flex:1;padding:13px;border-radius:14px;border:none;
+                   background:#2D5BFF;color:#fff;font-size:14px;font-weight:700;
+                   cursor:pointer;font-family:${FONT};
+                   display:flex;align-items:center;justify-content:center;gap:8px;
+                   box-shadow:0 4px 12px rgba(45,91,255,.3);"
+            onmouseenter="this.style.background='#1A3FCE';"
+            onmouseleave="this.style.background='#2D5BFF';">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 11 12 14 22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            Bugungi davomatni olish
+          </button>
+        </div>`;
+
+      res.innerHTML = html;
+
+      // ─────────────────────────────────────────────────────────────────
+      // attTakeAll — bugungi dars uchun davomat oynasini ochish
+      // ─────────────────────────────────────────────────────────────────
+      window.attTakeAll = async (groupId) => {
+        const todayLocal = todayStr();
+        // Bugungi jadval bor mi?
+        const todaySch = schedules.find(s => {
+          const ds = new Date(s.lessonDate).toISOString().slice(0, 10);
+          return ds === todayLocal;
+        });
+        if (!todaySch) {
+          toast('Bugun uchun dars jadvali topilmadi. Boshqa sanani tanlang yoki jadval qo\'shing.');
+          return;
+        }
+        openAttendanceModal(todaySch.id, groupId);
+      };
+
+      // ─────────────────────────────────────────────────────────────────
+      // attTakeDay — ma'lum bir kun uchun davomat oynasini ochish
+      // ─────────────────────────────────────────────────────────────────
+      window.attTakeDay = async (scheduleId, ds, groupId) => {
+        if (ds > todayStr()) {
+          toast('Kelajakdagi kun uchun davomat olib bo\'lmaydi');
+          return;
+        }
+        openAttendanceModal(scheduleId, groupId);
+      };
+
+      // ─────────────────────────────────────────────────────────────────
+      // attEditDay — bitta o'quvchi uchun bir kunni tahrirlash
+      // ─────────────────────────────────────────────────────────────────
+      window.attEditDay = async (scheduleId, studentId, studentName, groupId) => {
+        // Shu jadval uchun barcha o'quvchi davomatini olamiz
+        openAttendanceModal(scheduleId, groupId, studentId);
+      };
+
+    } catch (e) {
+      const res2 = document.getElementById('attResult');
+      if (res2) res2.innerHTML = emHtml ? emHtml('Xatolik: ' + e.message) : e.message;
+    }
+  }
+
+  // ── Davomat modal oynasi ────────────────────────────────────────────
+  // scheduleId — dars IDsi
+  // groupId    — guruh IDsi
+  // focusStudentId — (ixtiyoriy) faqat shu o'quvchini highlight qilish
+  async function openAttendanceModal(scheduleId, groupId, focusStudentId) {
+    if (typeof openModal !== 'function') return;
+    openModal('Davomat yuklanmoqda...', ldHtml ? ldHtml() : '');
+
+    try {
+      const data = await G('/attendance/admin-sheet/' + scheduleId);
+
+      const td = todayStr();
+      const lessonDs = new Date(data.lessonDate).toISOString().slice(0, 10);
+      const isFuture = lessonDs > td;
+
+      if (isFuture) {
+        const modalBody = document.querySelector('#modal > div > div:last-child');
+        if (modalBody) modalBody.innerHTML = `
+          <div style="text-align:center;padding:32px 20px;font-family:${FONT};">
+            <div style="width:56px;height:56px;border-radius:16px;background:#FEF4E0;
+                        display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+              🔒
+            </div>
+            <div style="font-size:15px;font-weight:700;color:#0B1437;margin-bottom:8px;">
+              Kelajakdagi dars
+            </div>
+            <div style="font-size:13px;color:#8A93AD;">
+              ${lessonDs} — bu kun uchun davomat olib bo'lmaydi.
+            </div>
+          </div>`;
+        return;
+      }
+
+      // Checkbox holati: { groupStudentId → bool }
+      const checked = {};
+      data.students.forEach(s => {
+        checked[s.groupStudentId] = s.isPresent === true;
+      });
+
+      const d = new Date(data.lessonDate);
+      const dateLabel = `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+      const editBadge = data.alreadyTaken
+        ? `<span style="background:#FEF4E0;color:#F59E0B;font-size:10px;font-weight:700;
+                        padding:2px 8px;border-radius:10px;margin-left:8px;">TAHRIRLASH</span>`
+        : `<span style="background:#E6F8F0;color:#10B981;font-size:10px;font-weight:700;
+                        padding:2px 8px;border-radius:10px;margin-left:8px;">YANGI</span>`;
+
+      // Modal sarlavhasini yangilash
+      const titleEl = document.querySelector('#modal [style*="font-size:18px"]');
+      if (titleEl) titleEl.innerHTML = `
+        ${data.groupName}${editBadge}
+        <div style="font-size:12px;font-weight:600;color:#8A93AD;margin-top:4px;">
+          ${dateLabel} · ${data.startTime}–${data.endTime}
+          ${data.teacherName ? ' · ' + data.teacherName : ''}
+        </div>`;
+
+      // Hammani belgilash / olib tashlash
+      let allChecked = data.students.every(s => checked[s.groupStudentId]);
+
+      const rowsHtml = data.students.map(s => {
+        const isFocus = focusStudentId && s.studentId === focusStudentId;
+        return `
+          <div class="chkr" id="attrow_${s.groupStudentId}"
+               style="${isFocus ? 'background:#EAF0FF;border-radius:12px;padding:12px;margin:-4px;' : ''}"
+               onclick="attToggle(${s.groupStudentId})">
+            <div class="chk${checked[s.groupStudentId] ? ' on' : ''}" id="attchk_${s.groupStudentId}">
+              ${checked[s.groupStudentId] ? '✓' : ''}
+            </div>
+            <div style="flex:1;font-size:14px;font-weight:${isFocus ? '700' : '500'};color:#0B1437;
+                        font-family:${FONT};">
+              ${s.firstName} ${s.lastName}
+            </div>
+            <div style="font-size:11px;color:${s.isPresent === true ? '#10B981' : s.isPresent === false ? '#EF4444' : '#D1D5DB'};
+                        font-weight:700;">
+              ${s.isPresent === true ? 'Kelgan' : s.isPresent === false ? 'Kelmagan' : 'Belgilanmagan'}
+            </div>
+          </div>`;
+      }).join('');
+
+      const bodyHtml = `
+        <!-- Statistika -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <div style="flex:1;background:#E6F8F0;border-radius:12px;padding:10px;text-align:center;">
+            <div id="att_cnt_present" style="font-size:20px;font-weight:800;color:#10B981;">
+              ${Object.values(checked).filter(Boolean).length}
+            </div>
+            <div style="font-size:11px;color:#10B981;font-weight:700;">Kelgan</div>
+          </div>
+          <div style="flex:1;background:#FCEDEC;border-radius:12px;padding:10px;text-align:center;">
+            <div id="att_cnt_absent" style="font-size:20px;font-weight:800;color:#EF4444;">
+              ${Object.values(checked).filter(v => !v).length}
+            </div>
+            <div style="font-size:11px;color:#EF4444;font-weight:700;">Kelmagan</div>
+          </div>
+          <div style="flex:1;background:#F8F9FC;border-radius:12px;padding:10px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:#525B7A;">${data.students.length}</div>
+            <div style="font-size:11px;color:#8A93AD;font-weight:700;">Jami</div>
+          </div>
+        </div>
+
+        <!-- Hammani toggle -->
+        <button id="attToggleAll"
+          style="width:100%;padding:10px;border-radius:12px;
+                 border:1.5px solid #EAEDF3;background:#F8F9FC;
+                 font-size:13px;font-weight:700;cursor:pointer;
+                 font-family:${FONT};color:#525B7A;margin-bottom:14px;"
+          onclick="attToggleAllFn()">
+          ${allChecked ? 'Barchasini olib tashlash' : 'Barchasini belgilash'}
+        </button>
+
+        <!-- Ro'yxat -->
+        <div style="max-height:380px;overflow-y:auto;overscroll-behavior:contain;">
+          ${rowsHtml}
+        </div>
+
+        <!-- Saqlash -->
+        <div style="margin-top:16px;">
+          <button onclick="attSaveModal(${scheduleId}, ${groupId})"
+            style="width:100%;padding:14px;border-radius:14px;border:none;
+                   background:#2D5BFF;color:#fff;font-size:15px;font-weight:700;
+                   cursor:pointer;font-family:${FONT};
+                   box-shadow:0 4px 12px rgba(45,91,255,.3);"
+            onmouseenter="this.style.background='#1A3FCE';"
+            onmouseleave="this.style.background='#2D5BFF';">
+            ✓ Davomatni Saqlash
+          </button>
+        </div>`;
+
+      const modalBody = document.querySelector('#modal > div > div:last-child');
+      if (modalBody) modalBody.innerHTML = bodyHtml;
+
+      // ── Checkbox toggle ────────────────────────────────────────────
+      window.attToggle = (gsId) => {
+        checked[gsId] = !checked[gsId];
+        const chk = document.getElementById('attchk_' + gsId);
+        if (chk) {
+          chk.className = 'chk' + (checked[gsId] ? ' on' : '');
+          chk.textContent = checked[gsId] ? '✓' : '';
+        }
+        // Statistika yangilash
+        const pCount = Object.values(checked).filter(Boolean).length;
+        const aCount = Object.values(checked).filter(v => !v).length;
+        const pc = document.getElementById('att_cnt_present');
+        const ac = document.getElementById('att_cnt_absent');
+        if (pc) pc.textContent = pCount;
+        if (ac) ac.textContent = aCount;
+        // Toggle all tugmasini yangilash
+        allChecked = pCount === data.students.length;
+        const btn = document.getElementById('attToggleAll');
+        if (btn) btn.textContent = allChecked ? 'Barchasini olib tashlash' : 'Barchasini belgilash';
+      };
+
+      window.attToggleAllFn = () => {
+        allChecked = !allChecked;
+        data.students.forEach(s => {
+          checked[s.groupStudentId] = allChecked;
+          const chk = document.getElementById('attchk_' + s.groupStudentId);
+          if (chk) {
+            chk.className = 'chk' + (allChecked ? ' on' : '');
+            chk.textContent = allChecked ? '✓' : '';
+          }
+        });
+        const pCount = allChecked ? data.students.length : 0;
+        const pc = document.getElementById('att_cnt_present');
+        const ac = document.getElementById('att_cnt_absent');
+        if (pc) pc.textContent = pCount;
+        if (ac) ac.textContent = data.students.length - pCount;
+        const btn = document.getElementById('attToggleAll');
+        if (btn) btn.textContent = allChecked ? 'Barchasini olib tashlash' : 'Barchasini belgilash';
+      };
+
+      // ── Saqlash ────────────────────────────────────────────────────
+      window.attSaveModal = async (schId, grpId) => {
+        const presentIds = Object.entries(checked)
+          .filter(([, v]) => v)
+          .map(([k]) => parseInt(k));
+        try {
+          await P('/attendance/admin-save/' + schId, { presentIds });
+          toast('✓ Davomat saqlandi');
+          closeModal();
+          loadAttTable(grpId);
+        } catch (e) {
+          toast('✗ ' + e.message);
+        }
+      };
+
+    } catch (e) {
+      const modalBody = document.querySelector('#modal > div > div:last-child');
+      if (modalBody) modalBody.innerHTML = `
+        <div style="text-align:center;padding:32px;color:#EF4444;font-family:${FONT};">
+          Xatolik: ${e.message}
+        </div>`;
+    }
+  }
+
+  // ── Ishga tushirish ────────────────────────────────────────────────
+  loadGroups();
+}
+
+
+// ============ ARCHIVED STUDENTS ============
+async function rArchivedStudents(el) {
+
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  function fmtSum(n) {
+    if (!n || n === '0') return '—';
+    return Number(n).toLocaleString('ru-RU') + " so'm";
+  }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    const dt = new Date(d);
+    return `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}.${dt.getFullYear()}`;
+  }
+
+  const MON_UZ = ['Yan','Fev','Mar','Apr','May','Iyu','Iyu','Avg','Sen','Okt','Noy','Dek'];
+  function fmtMonthYear(my) {
+    if (!my) return '—';
+    const [y, m] = my.split('-');
+    return `${MON_UZ[parseInt(m) - 1]} ${y}`;
+  }
+
+  el.innerHTML = ldHtml ? ldHtml() : '';
+
+  try {
+    const data = await G('/archived-students');
+
+    if (!data.length) {
+      el.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;font-family:${FONT};">
+          <div style="width:64px;height:64px;border-radius:20px;background:#F3F4F6;
+                      display:flex;align-items:center;justify-content:center;
+                      margin:0 auto 16px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </div>
+          <div style="font-size:16px;font-weight:700;color:#0B1437;margin-bottom:8px;">
+            O'chirilgan o'quvchilar yo'q
+          </div>
+          <div style="font-size:13px;color:#8A93AD;">
+            Tizimdan o'chirilgan yoki barcha guruhlardan chiqarilgan o'quvchilar shu yerda ko'rinadi
+          </div>
+        </div>`;
+      return;
+    }
+
+    // ── Qidiruv maydoni ──────────────────────────────────────────────
+    let searchQ = '';
+
+    function getFiltered() {
+      if (!searchQ) return data;
+      const q = searchQ.toLowerCase();
+      return data.filter(s =>
+        (s.firstName + ' ' + s.lastName).toLowerCase().includes(q) ||
+        (s.phoneSelf || '').includes(q) ||
+        (s.groups || []).some(g => g.groupName.toLowerCase().includes(q) || g.subjectName.toLowerCase().includes(q))
+      );
+    }
+
+    function drawTable() {
+      const filtered = getFiltered();
+      const tableBody = document.getElementById('archTbody');
+      const countEl  = document.getElementById('archCount');
+      if (countEl) countEl.textContent = `${filtered.length} ta o'quvchi`;
+
+      if (!tableBody) return;
+
+      if (!filtered.length) {
+        tableBody.innerHTML = `
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:#8A93AD;
+                                     font-size:13px;font-family:${FONT};">
+            Qidiruv natijasi topilmadi
+          </td></tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = filtered.map((s, idx) => {
+        const groupNames = (s.groups || [])
+          .map(g => `<span style="display:inline-block;padding:2px 8px;border-radius:8px;
+                                  background:#F3F4F6;font-size:10.5px;font-weight:700;
+                                  color:#525B7A;margin:2px;">${g.groupName}</span>`)
+          .join('');
+
+        const rowBg = idx % 2 === 0 ? '#fff' : '#FAFBFD';
+
+        const lastPayHtml = s.lastPayment
+          ? `<div style="font-size:12px;font-weight:700;color:#10B981;">
+               ${fmtSum(s.lastPayment.amount)}
+             </div>
+             <div style="font-size:10px;color:#8A93AD;margin-top:2px;">
+               ${fmtMonthYear(s.lastPayment.monthYear)} · ${s.lastPayment.paymentType === 'cash' ? 'Naqd' : 'Karta'}
+             </div>
+             <div style="font-size:10px;color:#B5BDD2;">${s.lastPayment.groupName}</div>`
+          : `<span style="color:#D1D5DB;font-size:13px;">—</span>`;
+
+        const phones = [s.phoneSelf, s.phoneFather, s.phoneMother].filter(Boolean);
+
+        return `
+          <tr style="background:${rowBg};border-bottom:1px solid #F2F4F8;">
+            <!-- # -->
+            <td style="padding:12px 10px;text-align:center;font-size:12px;
+                       font-weight:700;color:#B5BDD2;font-family:${FONT};">
+              ${idx + 1}
+            </td>
+            <!-- Ism -->
+            <td style="padding:12px 14px;position:sticky;left:0;z-index:1;background:${rowBg};">
+              <div style="font-size:14px;font-weight:700;color:#0B1437;font-family:${FONT};">
+                ${s.firstName} ${s.lastName}
+              </div>
+              ${phones.length
+                ? `<div style="font-size:11px;color:#8A93AD;margin-top:3px;">${phones[0]}</div>`
+                : ''
+              }
+              <div style="font-size:10px;color:#B5BDD2;margin-top:2px;">
+                ${s.educationType === 'school' ? 'Maktab' : s.educationType === 'college' ? 'Kollej' : 'Katta'}
+                ${s.grade ? ' · ' + s.grade : ''}
+              </div>
+            </td>
+            <!-- Ro'yxatga olingan -->
+            <td style="padding:12px 10px;text-align:center;font-family:${FONT};">
+              <div style="font-size:12px;font-weight:600;color:#525B7A;">
+                ${fmtDate(s.registeredAt)}
+              </div>
+            </td>
+            <!-- O'chirilgan sana -->
+            <td style="padding:12px 10px;text-align:center;font-family:${FONT};">
+              <div style="font-size:12px;font-weight:700;color:#EF4444;">
+                ${fmtDate(s.archivedDate)}
+              </div>
+            </td>
+            <!-- Guruhlar -->
+            <td style="padding:12px 10px;max-width:200px;font-family:${FONT};">
+              ${groupNames || '<span style="color:#D1D5DB;font-size:12px;">—</span>'}
+            </td>
+            <!-- Oxirgi to'lov -->
+            <td style="padding:12px 10px;font-family:${FONT};">
+              ${lastPayHtml}
+            </td>
+            <!-- Jami to'lov -->
+            <td style="padding:12px 10px;text-align:right;font-family:${FONT};">
+              <div style="font-size:13px;font-weight:800;
+                          color:${s.totalPaid !== '0' ? '#0B1437' : '#D1D5DB'};">
+                ${fmtSum(s.totalPaid)}
+              </div>
+              ${s.paymentsCount > 0
+                ? `<div style="font-size:10px;color:#8A93AD;margin-top:2px;">${s.paymentsCount} ta to'lov</div>`
+                : ''
+              }
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    // ── Asosiy layout ─────────────────────────────────────────────────
+    el.innerHTML = `
+      <!-- Sarlavha + statistika -->
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:16px;font-weight:800;color:#0B1437;font-family:${FONT};">
+            O'chirilgan O'quvchilar
+          </div>
+          <div id="archCount" style="font-size:12px;color:#8A93AD;font-family:${FONT};margin-top:2px;">
+            ${data.length} ta o'quvchi
+          </div>
+        </div>
+        <!-- Umumiy statistika -->
+        <div style="display:flex;gap:8px;">
+          <div style="background:#FCEDEC;border-radius:12px;padding:8px 14px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#EF4444;">${data.length}</div>
+            <div style="font-size:10px;color:#EF4444;font-weight:700;">O'chirilgan</div>
+          </div>
+          <div style="background:#E6F8F0;border-radius:12px;padding:8px 14px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#10B981;">
+              ${fmtSum(data.reduce((s, d) => s + BigInt(d.totalPaid || '0'), BigInt(0)).toString())}
+            </div>
+            <div style="font-size:10px;color:#10B981;font-weight:700;">Jami to'lagan</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Qidiruv -->
+      <div style="display:flex;align-items:center;gap:10px;background:#F3F4F6;
+                  border-radius:12px;padding:11px 14px;margin-bottom:14px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="archSearch" placeholder="Ism, telefon yoki guruh nomi bo'yicha qidiring..."
+               style="border:none;background:transparent;outline:none;font-size:14px;
+                      flex:1;font-family:${FONT};color:#0B1437;"
+               oninput="archDoSearch(this.value)" />
+      </div>
+
+      <!-- Jadval -->
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:16px;
+                  border:1.5px solid #EAEDF3;background:#fff;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:680px;
+                      font-family:${FONT};">
+          <thead>
+            <tr>
+              <th style="padding:12px 10px;background:#F8F9FC;border-bottom:2px solid #EAEDF3;
+                         font-weight:800;color:#8A93AD;text-align:center;width:40px;
+                         font-size:11px;">#</th>
+              <th style="padding:12px 14px;background:#F8F9FC;border-bottom:2px solid #EAEDF3;
+                         font-weight:800;color:#0B1437;text-align:left;position:sticky;
+                         left:0;z-index:2;min-width:150px;">O'quvchi</th>
+              <th style="padding:12px 10px;background:#F8F9FC;border-bottom:2px solid #EAEDF3;
+                         font-weight:800;color:#0B1437;text-align:center;min-width:90px;">
+                Ro'yxat sanasi
+              </th>
+              <th style="padding:12px 10px;background:#F8F9FC;border-bottom:2px solid #EAEDF3;
+                         font-weight:800;color:#EF4444;text-align:center;min-width:90px;">
+                O'chirilgan sana
+              </th>
+              <th style="padding:12px 10px;background:#F8F9FC;border-bottom:2px solid #EAEDF3;
+                         font-weight:800;color:#0B1437;text-align:left;min-width:160px;">
+                Guruhlar
+              </th>
+              <th style="padding:12px 10px;background:#F8F9FC;border-bottom:2px solid #EAEDF3;
+                         font-weight:800;color:#0B1437;text-align:left;min-width:140px;">
+                Oxirgi To'lov
+              </th>
+              <th style="padding:12px 10px;background:#F8F9FC;border-bottom:2px solid #EAEDF3;
+                         font-weight:800;color:#0B1437;text-align:right;min-width:110px;">
+                Jami To'lagan
+              </th>
+            </tr>
+          </thead>
+          <tbody id="archTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Izoh -->
+      <div style="margin-top:12px;padding:12px 16px;background:#FEF4E0;border-radius:12px;
+                  border:1px solid #FCD34D;font-family:${FONT};">
+        <div style="font-size:12px;color:#92400E;font-weight:700;margin-bottom:4px;">
+          ℹ️ Ma'lumot
+        </div>
+        <div style="font-size:12px;color:#B45309;line-height:1.6;">
+          Bu ro'yxatda barcha guruhlardan chiqarilgan yoki tizimdan o'chirilgan o'quvchilar ko'rsatiladi.
+          "O'chirilgan sana" — o'quvchi oxirgi guruhga qo'shilgan sanaga asoslanadi.
+          Aniq o'chirish sanasini saqlash uchun keyingi modulda <b>deletedAt</b> maydoni sxemaga qo'shiladi.
+        </div>
+      </div>`;
+
+    // Qidiruvni bog'lash
+    window.archDoSearch = q => {
+      searchQ = q;
+      drawTable();
+    };
+
+    drawTable();
+
+  } catch (e) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:48px 20px;font-family:${FONT};">
+        <div style="font-size:15px;font-weight:700;color:#EF4444;margin-bottom:8px;">
+          Xatolik yuz berdi
+        </div>
+        <div style="font-size:13px;color:#8A93AD;">${e.message}</div>
+        <button onclick="nav('archived')" style="margin-top:16px;padding:10px 20px;
+                border-radius:12px;border:none;background:#2D5BFF;color:#fff;
+                font-size:14px;font-weight:700;cursor:pointer;font-family:${FONT};">
+          Qayta urinish
+        </button>
+      </div>`;
+  }
+}
+
+
+// ============ DELETE STAFF ============
+async function rDelStaff(el){
+  async function load(){
+    const staff=await G('/staff');
+    el.innerHTML=`<div class="st" style="margin-bottom:12px">HODIMLARNI O'CHIRISH</div>
+      ${staff.length===0?emHtml("Hodimlar yo'q"):`<div class="card" style="padding:0;overflow:hidden">${staff.map(s=>`<div class="li">
+        <div class="lic" style="background:#fee2e2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500">${s.firstName} ${s.lastName}</div>
+        <div style="font-size:12px;color:#9ca3af">${s.role==='teacher'?"O'qituvchi":'Qabulxona'}${s.subject?' · '+s.subject:''}</div></div>
+        <button class="btn bd bsm" onclick="dsConf(${s.id},'${s.firstName} ${s.lastName}')">O'chirish</button>
+      </div>`).join('')}</div>`}`;
+    window.dsConf=(id,name)=>{
+      openModal("O'chirishni tasdiqlang",`<div style="font-size:15px;color:#6b7280;margin-bottom:20px"><b>${name}</b> ni o'chirishni tasdiqlaysizmi?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn bd" onclick="doDs(${id})">O'chirish</button>
+          <button class="btn bs" onclick="closeModal()">Bekor qilish</button>
+        </div>`);
+      window.doDs=async id2=>{try{await D(`/staff/${id2}?action=delete`);closeModal();toast("O'chirildi");load();}catch(e){toast('❌ '+e.message);}};
+    };
+  }
+  load();
+}
+
+init();
+</script>
+</body>
+</html>
+
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>O'qituvchi — CRM</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f7fa;overflow-x:hidden}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.topbar{position:sticky;top:0;z-index:50;background:#07568A;color:#fff;padding:0 16px;height:56px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(7,86,138,.3);font-size:17px;font-weight:600}
+.botnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #f3f4f6;display:flex;z-index:100;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
+.btab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px;border:none;background:transparent;cursor:pointer;font-size:11px;font-weight:500;color:#9ca3af;transition:color .15s}
+.btab.on{color:#07568A}
+.card{background:#fff;border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.li{display:flex;align-items:center;padding:14px 16px;background:#fff;border-bottom:1px solid #f3f4f6;cursor:pointer;transition:background .1s}
+.li:first-child{border-radius:16px 16px 0 0}.li:last-child{border-bottom:none;border-radius:0 0 16px 16px}.li:only-child{border-radius:16px}.li:active{background:#f9fafb}
+.lic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;width:100%}
+.bp{background:#07568A;color:#fff}.bs{background:#f3f4f6;color:#374151}
+.chkr{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6;cursor:pointer}
+.chkr:last-child{border-bottom:none}
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.chk.on{background:#22c55e;border-color:#22c55e;color:#fff;font-size:13px}
+.pv{padding:16px;padding-bottom:80px}
+.st{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:11px 22px;border-radius:24px;font-size:14px;font-weight:500;z-index:9999;white-space:nowrap;display:none}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<div id="loading" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f7fa">
+  <svg style="animation:spin .7s linear infinite" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#07568A" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+</div>
+
+<div id="app" style="display:none">
+  <div class="topbar" id="pgTitle">Dars jadvali</div>
+  <div id="content" class="pv"></div>
+  <nav class="botnav">
+    <button class="btab on" id="tab_schedule" onclick="tNav('schedule')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Jadval
+    </button>
+    <button class="btab" id="tab_attendance" onclick="tNav('attendance')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Davomat
+    </button>
+    <button class="btab" id="tab_mygroups" onclick="tNav('mygroups')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Guruhlarim
+    </button>
+  </nav>
+</div>
+
+<div id="modals"></div>
+
+<script>
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();}
+function getTid(){
+  const uid=tg?.initDataUnsafe?.user?.id;
+  if(uid)return uid.toString();
+  try{
+    const raw=tg?.initData||'';
+    if(raw){const p=new URLSearchParams(raw);const u=JSON.parse(decodeURIComponent(p.get('user')||'{}'));if(u.id)return u.id.toString();}
+  }catch(e){}
+  return null;
+}
+async function api(method,path,body){
+  const tid=getTid();
+  const headers={'Content-Type':'application/json'};
+  if(tid)headers['x-telegram-id']=tid;
+  const r=await fetch('/api'+path,{method,headers,body:body?JSON.stringify(body):undefined});
+  const d=await r.json();if(!r.ok)throw new Error(d.error||'Xatolik');return d;
+}
+const G=p=>api('GET',p),P=(p,b)=>api('POST',p,b);
+function fmt(n){return Number(n).toLocaleString('ru-RU')+" so'm";}
+function mLabel(my){if(!my)return'';const[y,m]=my.split('-');const ms=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];return ms[parseInt(m)-1]+' '+y;}
+let _tt;function toast(msg,ms=2800){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(_tt);_tt=setTimeout(()=>t.style.display='none',ms);}
+function ldHtml(){return `<div style="display:flex;justify-content:center;padding:48px"><svg style="animation:spin .7s linear infinite" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#07568A" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg></div>`;}
+function emHtml(msg){return '<div style="text-align:center;padding:48px 20px;color:#9ca3af"><div style="margin-bottom:12px"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><div style="font-size:14px">'+msg+'</div></div>';}
+function openModal(title,html){closeModal();const d=document.createElement('div');d.id='modal';d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end';d.innerHTML=`<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:92vh;overflow-y:auto;animation:slideUp .25s ease;overscroll-behavior:contain"><div style="padding:12px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;background:#fff;z-index:10"><div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 14px"></div><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:18px;font-weight:700">${title}</div><button onclick="closeModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#9ca3af;padding:0">×</button></div></div><div style="padding:16px 20px 32px">${html}</div></div>`;d.addEventListener('click',e=>{if(e.target===d)closeModal();});document.getElementById('modals').appendChild(d);}
+function closeModal(){const m=document.getElementById('modal');if(m)m.remove();}
+
+const TITLES={schedule:'Dars jadvali',attendance:'Davomat',mygroups:'Guruhlarim'};
+
+function tNav(page){
+  document.getElementById('pgTitle').textContent=TITLES[page];
+  ['schedule','attendance','mygroups'].forEach(p=>{
+    document.getElementById(`tab_${p}`).className='btab'+(p===page?' on':'');
+  });
+  const el=document.getElementById('content');
+  el.innerHTML=ldHtml();
+  ({schedule:rSchedule,attendance:rAttendance,mygroups:rMyGroups})[page]?.(el);
+}
+
+// SCHEDULE
+async function rSchedule(el){
+  const today=await G('/schedule/today');
+  const todaySection=today.length===0?
+    `<div style="background:#f9fafb;border-radius:16px;padding:20px;text-align:center;color:#9ca3af;margin-bottom:16px">Bugun dars yo'q</div>`:
+    `<div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">${today.map(s=>`
+      <div class="li" style="cursor:default">
+        <div class="lic" style="background:#dbeafe">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:500">${s.group.name}</div>
+          <div style="font-size:12px;color:#9ca3af">${s.group.subject.name}</div>
+        </div>
+        <div style="font-size:14px;font-weight:600;color:#07568A">${s.startTime}–${s.endTime}</div>
+      </div>`).join('')}</div>`;
+
+  el.innerHTML=`
+    <div class="st">BUGUNGI DARSLAR</div>
+    ${todaySection}
+    <button class="btn bs" onclick="showWeek()">Haftalik jadval</button>`;
+
+  window.showWeek=async()=>{
+    el.innerHTML=ldHtml();
+    const week=await G('/schedule/week');
+    const days=['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba','Yakshanba'];
+    el.innerHTML=`
+      <button class="btn bs" style="margin-bottom:16px" onclick="rSchedule(document.getElementById('content'))">← Orqaga</button>
+      ${week.map((day)=>`
+        <div style="margin-bottom:12px">
+          <div class="st">${day.day} — ${new Date(day.date).toLocaleDateString('uz-UZ')}</div>
+          ${day.schedules.length===0?`<div style="font-size:13px;color:#d1d5db;padding:4px 0">Dars yo'q</div>`:
+          `<div class="card" style="padding:0;overflow:hidden">${day.schedules.map(s=>`
+            <div class="li" style="cursor:default">
+              <div style="flex:1"><div style="font-size:14px;font-weight:500">${s.group.name} — ${s.group.subject.name}</div></div>
+              <div style="font-size:13px;font-weight:600;color:#07568A">${s.startTime}–${s.endTime}</div>
+            </div>`).join('')}</div>`}
+        </div>`).join('')}`;
+  };
+}
+
+// ATTENDANCE
+async function rAttendance(el){
+  const groups=await G('/groups/my');
+  if(!groups.length){el.innerHTML=emHtml("Guruhlaringiz yo'q");return;}
+  el.innerHTML=`
+    <div class="st">GURUH TANLANG</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      ${groups.map(g=>`<div class="li" onclick="attG(${g.id})">
+        <div class="lic" style="background:#dcfce7">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500">${g.name}</div>
+        <div style="font-size:12px;color:#9ca3af">${g.subject?.name} · ${g._count?.groupStudents||0} o'quvchi</div></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      </div>`).join('')}
+    </div>`;
+
+  window.attG=async gid=>{
+    const{hasLesson,schedule}=await G(`/schedule/today/${gid}`);
+    if(!hasLesson){
+      el.innerHTML='<button class="btn bs" style="margin-bottom:16px" id="attBack">← Orqaga</button>'
+        +'<div style="text-align:center;padding:48px 20px;color:#9ca3af"><div style="font-size:48px;margin-bottom:12px">📅</div><div>Bugun dars belgilanmagan</div></div>';
+      document.getElementById('attBack')?.addEventListener('click',()=>rAttendance(document.getElementById('content')));
+      return;
+    }
+    const res=await G(`/attendance/sheet/${schedule.id}`);
+    const allSts=res.allStudents||res.students;
+    const alreadyTaken=res.alreadyTaken;
+    let pIds=new Set(
+      alreadyTaken
+        ? allSts.filter(s=>s.isPresent).map(s=>s.groupStudentId)
+        : allSts.map(s=>s.groupStudentId)
+    );
+
+    function drawSheet(){
+      el.innerHTML='<button class="btn bs" style="width:auto;margin-bottom:12px" id="attBack">← Orqaga</button>'
+        +(alreadyTaken?'<div style="background:#fef9c3;border:1.5px solid #fbbf24;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:8px">Davomat avval olingan \u2014 o\u02bczgartirib saqlashingiz mumkin.</div>':'')
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+        +'<span class="st" style="margin:0">BARCHA OʼQUVCHILAR</span>'
+        +'<span id="attCnt" style="font-size:13px;color:#07568A;font-weight:700">✅ '+pIds.size+'/'+allSts.length+'</span>'
+        +'</div>'
+        +'<div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">'
+        +allSts.map(s=>'<div class="li" id="attrow'+s.groupStudentId+'">'
+          +'<span style="font-size:15px;font-weight:500;flex:1">'+s.firstName+' '+s.lastName+'</span>'
+          +'<div class="chk'+(pIds.has(s.groupStudentId)?' on':'')+'" id="att_'+s.groupStudentId+'">'+(pIds.has(s.groupStudentId)?'✓':'')+'</div>'
+          +'</div>').join('')
+        +'</div>'
+        +'<div style="display:flex;gap:8px;margin-bottom:12px">'
+        +'<button class="btn bs" style="flex:1;font-size:13px" id="attAllBtn">Hammasi keldi</button>'
+        +'<button class="btn bs" style="flex:1;font-size:13px" id="attClrBtn">Tozalash</button>'
+        +'</div>'
+        +'<button class="btn bp" id="attSaveBtn">✓ Davomatni saqlash</button>';
+
+      document.getElementById('attBack')?.addEventListener('click',()=>rAttendance(document.getElementById('content')));
+      function updCnt(){ const c=document.getElementById('attCnt');if(c)c.textContent='✅ '+pIds.size+'/'+allSts.length; }
+      function updRow(gsid){const cb=document.getElementById('att_'+gsid);if(cb){cb.classList.toggle('on',pIds.has(gsid));cb.textContent=pIds.has(gsid)?'✓':'';}}
+      allSts.forEach(s=>{
+        document.getElementById('attrow'+s.groupStudentId)?.addEventListener('click',()=>{
+          if(pIds.has(s.groupStudentId))pIds.delete(s.groupStudentId);else pIds.add(s.groupStudentId);
+          updRow(s.groupStudentId);updCnt();
+        });
+      });
+      document.getElementById('attAllBtn')?.addEventListener('click',()=>{
+        pIds=new Set(allSts.map(s=>s.groupStudentId));allSts.forEach(s=>updRow(s.groupStudentId));updCnt();
+      });
+      document.getElementById('attClrBtn')?.addEventListener('click',()=>{
+        pIds=new Set();allSts.forEach(s=>updRow(s.groupStudentId));updCnt();
+      });
+      document.getElementById('attSaveBtn')?.addEventListener('click',async()=>{
+        const btn=document.getElementById('attSaveBtn');
+        if(btn){btn.disabled=true;btn.textContent='Saqlanmoqda...';}
+        try{
+          await P(`/attendance/save/${schedule.id}`,{presentIds:Array.from(pIds)});
+          // Saqlangandan keyin - olingan deb belgilaymiz
+          const warn=document.querySelector('.attWarnBanner');
+          if(warn){warn.style.background='#f0fdf4';warn.style.borderColor='#bbf7d0';warn.style.color='#15803d';warn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg> Davomat muvaffaqiyatli saqlandi';}
+          else{
+            const banner=document.createElement('div');
+            banner.className='attWarnBanner';
+            banner.style.cssText='display:flex;align-items:center;gap:8px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;color:#15803d';
+            banner.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg> Davomat saqlandi';
+            document.getElementById('attSaveBtn')?.before(banner);
+          }
+          if(btn){btn.disabled=false;btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Qayta saqlash';}
+        }catch(e){
+          toast('\u2717 '+e.message);
+          if(btn){btn.disabled=false;btn.textContent='\u2713 Davomatni saqlash';}
+        }
+      });
+    }
+    drawSheet();
+  };
+}
+
+// MY GROUPS
+async function rMyGroups(el){
+  const groups=await G('/groups/my');
+  if(!groups.length){el.innerHTML=emHtml("Guruhlaringiz yo'q");return;}
+  el.innerHTML=groups.map(g=>`
+    <div class="card" style="padding:16px;margin-bottom:12px;cursor:pointer" onclick="mgG(${g.id})">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-weight:700;font-size:16px">${g.name}</div><div style="font-size:13px;color:#6b7280;margin-top:2px">${g.subject?.name}</div></div>
+        <div style="text-align:right"><div style="font-size:28px;font-weight:700;color:#07568A">${g._count?.groupStudents||0}</div><div style="font-size:11px;color:#9ca3af">o'quvchi</div></div>
+      </div>
+    </div>`).join('');
+
+  window.mgG=async id=>{
+    const sts=await G(`/groups/${id}/students`);
+    const g=groups.find(x=>x.id===id);
+    el.innerHTML=`
+      <button class="btn bs" style="width:auto;margin-bottom:16px" onclick="rMyGroups(document.getElementById('content'))">← Orqaga</button>
+      <div style="font-weight:700;font-size:16px;margin-bottom:4px">${g?.name}</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:16px">${g?.subject?.name} — ${sts.length} o'quvchi</div>
+      <div class="card" style="padding:0;overflow:hidden">
+        ${sts.length===0?`<div style="padding:20px;text-align:center;color:#9ca3af">O'quvchilar yo'q</div>`:
+        sts.map((s,i)=>`<div class="li" id="mgst${s.id}">
+          <div style="width:32px;height:32px;border-radius:50%;background:#dbeafe;color:#07568A;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;margin-right:12px">${i+1}</div>
+          <div style="flex:1">
+            <div style="font-weight:500;font-size:15px">${s.firstName} ${s.lastName}</div>
+            <div style="font-size:12px;color:#9ca3af;margin-top:2px">
+              ${s.phoneSelf?`<a href="tel:${s.phoneSelf}" style="color:#07568A;text-decoration:none;font-weight:500">${s.phoneSelf}</a>`:''}
+              ${s.phoneSelf&&s.phoneFather?' · ':''}
+              ${s.phoneFather?`<a href="tel:${s.phoneFather}" style="color:#6b7280;text-decoration:none">${s.phoneFather}</a>`:''}
+              ${!s.phoneSelf&&!s.phoneFather?`<span style="color:#9ca3af">—</span>`:''}
+            </div>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>`).join('')}
+      </div>`;
+
+    sts.forEach(s=>{
+      document.getElementById('mgst'+s.id)?.addEventListener('click',()=>mgOpenStudent(s,g));
+    });
+  };
+
+  window.mgOpenStudent=(s,g)=>{
+    const edu={school:'Maktab',college:'Kollej',adult:'Yuqori yosh'};
+    const eduStr=edu[s.educationType]||(s.educationType||'');
+    function phoneRow(label,phone){
+      if(!phone)return '';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f3f4f6">'
+        +'<span style="color:#6b7280;font-size:14px">'+label+'</span>'
+        +'<a href="tel:'+phone+'" style="display:flex;align-items:center;gap:10px;text-decoration:none">'
+        +'<span style="font-weight:600;color:#07568A;font-size:15px">'+phone+'</span>'
+        +'<div style="width:34px;height:34px;border-radius:50%;background:#07568A;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.84a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
+        +'</div></a></div>';
+    }
+    const noPhone=!s.phoneSelf&&!s.phoneFather&&!s.phoneMother;
+    openModal(s.firstName+' '+s.lastName,
+      '<div style="margin-bottom:16px">'
+      +(eduStr?('<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6">'
+        +'<span style="color:#6b7280;font-size:14px">Oʼqish joyi</span>'
+        +'<b>'+eduStr+(s.grade?' '+s.grade+'-sinf':'')+'</b></div>'):'')
+      +phoneRow("O'zi",s.phoneSelf)
+      +phoneRow('Otasi',s.phoneFather)
+      +phoneRow('Onasi',s.phoneMother)
+      +(noPhone?'<div style="padding:10px 0;color:#9ca3af;font-size:14px">Telefon yoʼlq</div>':'')
+      +'</div>'
+      +'<div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">GURUH</div>'
+      +'<div style="padding:10px 0;font-size:14px"><b>'+(g?.name||'')+'</b> — '+(g?.subject?.name||'')+'</div>'
+    );
+  };
+}
+
+// INIT
+async function init(){
+  try{
+    const user = await G('/auth/me');
+    if(user.role !== 'teacher' && user.role !== 'admin'){
+      throw new Error('Ruxsat yo\'q');
+    }
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    tNav('schedule');
+  } catch(e){
+    const ld=document.getElementById('loading');
+    ld.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f5f7fa;text-align:center;padding:40px';
+    const msg = e.message==='Ruxsat yo\'q'
+      ? 'Bu sahifaga kirish uchun o\'qituvchi huquqi kerak'
+      : 'Botda /start bosib, CRM ni oching';
+    ld.innerHTML=String.fromCharCode(128126)+'<br><br><b style="font-size:16px;color:#374151">Tizimga kirish uchun</b><br><span style="font-size:14px;color:#6b7280">'+msg+'</span>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

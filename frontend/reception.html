@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Qabulxona — CRM</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F7FB;overflow-x:hidden}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-500px 0}100%{background-position:500px 0}}
+
+/* ── Layout ── */
+.sidebar{position:fixed;top:0;left:0;width:280px;height:100vh;background:#07568A;z-index:400;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain}
+.sidebar.open{transform:translateX(0)}
+.sbov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:399;display:none}
+.sbov.open{display:block}
+.topbar{position:sticky;top:0;z-index:50;background:#07568A;color:#fff;padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(7,86,138,.3)}
+.hbtn{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nl{display:flex;align-items:center;gap:12px;padding:13px 20px;color:rgba(255,255,255,.7);font-size:14px;font-weight:600;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.nl:hover,.nl.active{background:rgba(255,255,255,.12);color:#fff}
+.nl.active{border-left-color:#fff}
+.nic{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nl.active .nic{background:rgba(255,255,255,.22)}
+
+/* ── Cards & Lists ── */
+.card{background:#fff;border-radius:18px;border:1.5px solid #EAEDF3;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.li{display:flex;align-items:center;padding:14px 16px;background:#fff;border-bottom:1px solid #F2F4F8;cursor:pointer;transition:background .1s}
+.li:first-child{border-radius:18px 18px 0 0}.li:last-child{border-bottom:none;border-radius:0 0 18px 18px}.li:only-child{border-radius:18px}.li:active{background:#F5F7FB}
+.lic{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px}
+
+/* ── Forms ── */
+.inp{width:100%;padding:12px 14px;border:1.5px solid #EAEDF3;border-radius:12px;font-size:15px;outline:none;background:#fff;transition:border-color .15s;-webkit-appearance:none;font-family:inherit}
+.inp:focus{border-color:#2D5BFF}
+.ig{margin-bottom:16px}
+.il{font-size:11px;font-weight:800;color:#8A93AD;margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:14px;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;width:100%;font-family:inherit}
+.btn:active{transform:scale(.98)}
+.bp{background:#2D5BFF;color:#fff;box-shadow:0 4px 12px rgba(45,91,255,.25)}
+.bp:hover{background:#1A3FCE}
+.bs{background:#F3F4F6;color:#374151}
+.bs:hover{background:#EAEDF3}
+.bd{background:#FCEDEC;color:#EF4444}
+.bd:hover{background:#FEE2E2}
+.bsm{padding:8px 14px;font-size:12px;width:auto;border-radius:10px}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;background:#F3F4F6;border-radius:14px;padding:4px;margin-bottom:16px}
+.tab{flex:1;padding:9px;text-align:center;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:#8A93AD;transition:all .15s;font-family:inherit}
+.tab.on{background:#fff;color:#2D5BFF;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+/* ── Checkboxes ── */
+.chkr{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F2F4F8;cursor:pointer}
+.chkr:last-child{border-bottom:none}
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid #D1D5DB;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.chk.on{background:#10B981;border-color:#10B981;color:#fff;font-size:13px}
+
+/* ── Month pills ── */
+.mp{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scrollbar-width:none}
+.mp::-webkit-scrollbar{display:none}
+.mpb{flex-shrink:0;padding:8px 16px;border-radius:22px;border:1.5px solid #EAEDF3;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:#525B7A;white-space:nowrap;transition:all .15s}
+.mpb.on{background:#2D5BFF;color:#fff;border-color:#2D5BFF;box-shadow:0 3px 10px rgba(45,91,255,.3)}
+
+/* ── Search box ── */
+.sbox{display:flex;align-items:center;gap:10px;background:#F3F4F6;border-radius:14px;padding:11px 14px;margin-bottom:16px}
+.sbox input{border:none;background:transparent;outline:none;font-size:15px;flex:1;font-family:inherit;color:#0B1437}
+
+/* ── Group pills ── */
+.gpill{padding:7px 14px;border-radius:20px;border:1.5px solid #EAEDF3;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#525B7A;display:inline-block;margin:3px;transition:all .15s}
+.gpill.on{background:#2D5BFF;color:#fff;border-color:#2D5BFF}
+
+/* ── Section labels ── */
+.st{font-size:11px;font-weight:800;color:#8A93AD;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+
+/* ── Page content ── */
+.pv{padding:16px;padding-bottom:32px}
+.prf-hdr{background:linear-gradient(135deg,#07568A,#0a7bc4);padding:28px 20px 20px;color:#fff;text-align:center}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#0B1437;color:#fff;padding:11px 22px;border-radius:24px;font-size:14px;font-weight:600;z-index:9999;white-space:nowrap;display:none;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+
+/* ── Education type badges ── */
+.edu-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:10px;font-size:10.5px;font-weight:700}
+
+/* ── Skeleton loader ── */
+.sk{background:linear-gradient(90deg,#EAEDF3 25%,#F5F7FB 50%,#EAEDF3 75%);background-size:500px 100%;animation:shimmer 1.4s infinite linear;border-radius:10px}
+
+/* ── Narxlar bo'limi ── */
+.price-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #F2F4F8;gap:12px}
+.price-row:last-child{border-bottom:none}
+.price-input{width:140px;padding:9px 12px;border:1.5px solid #EAEDF3;border-radius:10px;font-size:14px;font-weight:700;outline:none;text-align:right;background:#F8F9FC;transition:border-color .15s;font-family:inherit}
+.price-input:focus{border-color:#2D5BFF;background:#fff}
+.carried-badge{font-size:10px;color:#F59E0B;font-weight:700;background:#FEF4E0;padding:2px 7px;border-radius:8px;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- Loading screen -->
+<div id="loading" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F5F7FB;flex-direction:column;gap:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+  <div style="width:88px;height:88px;border-radius:26px;background:#fff;border:1.5px solid #EAEDF3;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(45,91,255,.1);margin-bottom:22px;overflow:hidden;">
+    <img src="/logo.png" alt="Logo" style="width:66px;height:66px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+    <div style="display:none;width:66px;height:66px;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#2D5BFF;letter-spacing:-1px;">T+</div>
+  </div>
+  <div style="font-size:17px;font-weight:800;color:#0B1437;margin-bottom:4px;letter-spacing:-.3px;">Ta'lim Plus</div>
+  <div style="font-size:12px;font-weight:600;color:#8A93AD;margin-bottom:28px;">Qabulxona</div>
+  <div style="width:140px;height:3px;background:#EAEDF3;border-radius:4px;overflow:hidden;">
+    <div style="height:100%;background:linear-gradient(90deg,#2D5BFF,#8056F5);border-radius:4px;animation:slideUp 2.2s cubic-bezier(.4,0,.2,1) forwards;width:0%;"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="sbov" id="sbov" onclick="sbClose()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="prf-hdr">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:3px solid rgba(255,255,255,.3)">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      </div>
+      <div style="font-weight:800;font-size:16px" id="sbName">Qabulxona</div>
+      <div style="font-size:12px;opacity:.75;margin-top:4px;font-weight:600">Qabulxona xodimi</div>
+    </div>
+    <div style="padding:12px 0;flex:1" id="sbNav"></div>
+    <div style="padding:16px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.3);text-align:center">O'quv Markazi CRM v3.0</div>
+  </div>
+
+  <div class="topbar">
+    <button class="hbtn" onclick="sbOpen()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <span style="font-size:17px;font-weight:700" id="pgTitle">Qabulga yozilganlar</span>
+    <div style="width:36px"></div>
+  </div>
+
+  <div id="content" class="pv"></div>
+</div>
+
+<div id="modals"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CORE
+// ═══════════════════════════════════════════════════════════════
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+function getTid() {
+  const uid = tg?.initDataUnsafe?.user?.id;
+  if (uid) return uid.toString();
+  try {
+    const raw = tg?.initData || '';
+    if (raw) {
+      const p = new URLSearchParams(raw);
+      const u = JSON.parse(decodeURIComponent(p.get('user') || '{}'));
+      if (u.id) return u.id.toString();
+    }
+  } catch(e) {}
+  return null;
+}
+
+async function api(method, path, body) {
+  const tid = getTid();
+  const headers = { 'Content-Type': 'application/json' };
+  if (tid) headers['x-telegram-id'] = tid;
+  const r = await fetch('/api' + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Xatolik');
+  return d;
+}
+
+const G = p => api('GET', p);
+const P = (p, b) => api('POST', p, b);
+const U = (p, b) => api('PUT', p, b);
+const D = p => api('DELETE', p);
+
+function fmt(n) { return Number(n).toLocaleString('ru-RU') + " so'm"; }
+
+function mLabel(my) {
+  if (!my) return '';
+  const [y, m] = my.split('-');
+  const ms = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+  return ms[parseInt(m) - 1] + ' ' + y;
+}
+
+function sixMonths() {
+  const now = new Date(), res = [];
+  for (let i = -2; i <= 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (k >= '2026-04') res.push(k);
+  }
+  return res;
+}
+
+function nowMonth() {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+}
+
+let _tt;
+function toast(msg, ms = 2800) {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg;
+  t.style.display = 'block';
+  clearTimeout(_tt);
+  _tt = setTimeout(() => t.style.display = 'none', ms);
+}
+
+function ldHtml() {
+  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:52px 20px;gap:12px;">
+    <div style="width:32px;height:32px;border:3px solid #EAEDF3;border-top-color:#2D5BFF;border-radius:50%;animation:spin .75s linear infinite;"></div>
+    <span style="font-size:13px;font-weight:600;color:#8A93AD;">Yuklanmoqda...</span>
+  </div>`;
+}
+
+function emHtml(msg) {
+  return `<div style="text-align:center;padding:48px 20px;color:#8A93AD;">
+    <div style="width:56px;height:56px;border-radius:16px;background:#F3F4F6;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      </svg>
+    </div>
+    <div style="font-size:14px;font-weight:600;">${msg}</div>
+  </div>`;
+}
+
+function openModal(title, html) {
+  closeModal();
+  const d = document.createElement('div');
+  d.id = 'modal';
+  d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end';
+  d.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:92vh;overflow-y:auto;animation:slideUp .25s ease;overscroll-behavior:contain">
+    <div style="padding:12px 20px 16px;border-bottom:1px solid #F2F4F8;position:sticky;top:0;background:#fff;z-index:10">
+      <div style="width:40px;height:4px;background:#EAEDF3;border-radius:2px;margin:0 auto 14px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:18px;font-weight:800;color:#0B1437">${title}</div>
+        <button onclick="closeModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#8A93AD;padding:0;line-height:1">×</button>
+      </div>
+    </div>
+    <div style="padding:16px 20px 32px">${html}</div>
+  </div>`;
+  d.addEventListener('click', e => { if (e.target === d) closeModal(); });
+  document.getElementById('modals').appendChild(d);
+}
+
+function closeModal() { const m = document.getElementById('modal'); if (m) m.remove(); }
+
+function sbOpen() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sbov').classList.add('open'); document.getElementById('content').style.overflow = 'hidden'; }
+function sbClose() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sbov').classList.remove('open'); document.getElementById('content').style.overflow = ''; }
+
+// ── SVG ikonlar (inline) ──────────────────────────────────────────────
+const SVGI = {
+  list:     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  addUser:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>',
+  groups:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  money:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  expense:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+  debtors:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  edit:     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  convert:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg>',
+  archive:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  pricing:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+  // Education type icons
+  school:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+  college:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+  adult:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  // Status icons
+  waiting:  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  enrolled: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>',
+  partial:  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  phone:    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.84a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+  trash:    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  enroll:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>',
+  save:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  plus:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  chevron:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  search:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
+  back:     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>',
+  tag:      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+  check:    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  ok:       '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+};
+
+// ── Navigatsiya ──────────────────────────────────────────────────────
+const REC_NAV = [
+  { id: 'applist',   label: 'Qabulga yozilganlar',   svg: SVGI.list },
+  { id: 'applicants',label: 'Qabulga yozish',         svg: SVGI.addUser },
+  { id: 'groups',    label: 'Guruhlar',               svg: SVGI.groups },
+  { id: 'pricing',   label: "Narxlar bo'limi",        svg: SVGI.pricing },
+  { id: 'payments',  label: "To'lovlar",              svg: SVGI.money },
+  { id: 'expenses',  label: 'Chiqimlar',              svg: SVGI.expense },
+  { id: 'debtors',   label: 'Qarzdorlar',             svg: SVGI.debtors },
+  { id: 'edit',      label: 'Tahrirlash',             svg: SVGI.edit },
+  { id: 'conversion',label: 'Konversiya',             svg: SVGI.convert },
+  { id: 'archive',   label: "O'chirish/Arxiv",        svg: SVGI.archive },
+];
+
+const TITLES = {
+  applist:    'Qabulga yozilganlar',
+  applicants: 'Qabulga yozish',
+  groups:     'Guruhlar',
+  pricing:    "Narxlar bo'limi",
+  payments:   "To'lovlar",
+  expenses:   'Chiqimlar',
+  debtors:    'Qarzdorlar',
+  edit:       'Tahrirlash',
+  conversion: 'Konversiya',
+  archive:    "O'chirish/Arxiv"
+};
+
+let curPage = 'applist';
+
+function setupSidebar(user) {
+  document.getElementById('sbName').textContent = `${user.firstName} ${user.lastName}`;
+  document.getElementById('sbNav').innerHTML = REC_NAV.map(n => `
+    <div class="nl${curPage === n.id ? ' active' : ''}" id="nl_${n.id}" onclick="nav('${n.id}')">
+      <div class="nic">${n.svg}</div><span>${n.label}</span>
+    </div>`).join('');
+}
+
+function nav(page) {
+  curPage = page;
+  document.getElementById('pgTitle').textContent = TITLES[page] || page;
+  document.querySelectorAll('.nl').forEach(el => el.classList.toggle('active', el.id === `nl_${page}`));
+  sbClose();
+  const el = document.getElementById('content');
+  el.innerHTML = ldHtml();
+  ({
+    applist:    rAppList,
+    applicants: rApplicants,
+    groups:     rGroups,
+    pricing:    rPricing,
+    payments:   rPayments,
+    expenses:   rExpenses,
+    debtors:    rDebtors,
+    edit:       rEdit,
+    conversion: rConversion,
+    archive:    rArchive
+  })[page]?.(el);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// APPLIST — Qabulga yozilganlar
+// ═══════════════════════════════════════════════════════════════
+async function rAppList(el) {
+  let srch = '';
+  el.innerHTML = `
+    <div class="sbox">
+      ${SVGI.search}
+      <input placeholder="Ism yoki familya..." oninput="alSrch(this.value)" style="border:none;background:transparent;outline:none;font-size:15px;flex:1;font-family:inherit;color:#0B1437"/>
+    </div>
+    <div id="alList"></div>`;
+  window.alSrch = v => { srch = v; load(); };
+
+  async function load() {
+    const data = await G(`/applicants${srch ? `?search=${encodeURIComponent(srch)}` : ''}`);
+    const list = document.getElementById('alList');
+    if (!data.length) { list.innerHTML = emHtml('Hali qabulga yozilganlar yo\'q'); return; }
+
+    // O'qish turi ikonlari va ranglari
+    const eduMeta = {
+      school:  { icon: SVGI.school,  color: '#2D5BFF', bg: '#EAF0FF', label: 'Maktab' },
+      college: { icon: SVGI.college, color: '#10B981', bg: '#E6F8F0', label: 'Kollej' },
+      adult:   { icon: SVGI.adult,   color: '#8056F5', bg: '#F0EAFE', label: 'Katta' },
+    };
+
+    list.innerHTML = `<div class="card" style="padding:0;overflow:hidden">
+      ${data.map(a => {
+        const s = (a.applicantSubjects || []).map(x => x.subject?.name).join(', ') || '';
+        const ph = a.phoneSelf || a.phoneFather || a.phoneMother || '—';
+        const em = eduMeta[a.educationType] || eduMeta.school;
+        const isEnrolled = a.status === 'enrolled';
+        const isPartial = isEnrolled && (a.student?.groupStudents || []).some(gs => gs.status === 'active');
+
+        let statusBadge = '';
+        if (isPartial) {
+          statusBadge = `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#F59E0B;background:#FEF4E0;padding:2px 7px;border-radius:8px;vertical-align:middle;margin-left:6px;">${SVGI.partial} qisman</span>`;
+        } else if (isEnrolled) {
+          statusBadge = `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#10B981;background:#E6F8F0;padding:2px 7px;border-radius:8px;vertical-align:middle;margin-left:6px;">${SVGI.enrolled} biriktirilgan</span>`;
+        }
+
+        return `<div class="li" onclick='alOpen(${JSON.stringify(a).replace(/'/g, "&#39;")})'>
+          <div class="lic" style="background:${em.bg};color:${em.color};">${em.icon.replace('stroke="currentColor"', `stroke="${em.color}"`)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:15px;font-weight:700;color:#0B1437;display:flex;align-items:center;flex-wrap:wrap;">
+              ${a.firstName} ${a.lastName}${statusBadge}
+            </div>
+            <div style="font-size:12px;color:#8A93AD;margin-top:2px;display:flex;align-items:center;gap:4px;">
+              ${em.icon.replace('width="20" height="20"', 'width="13" height="13"').replace('stroke="currentColor"', 'stroke="#8A93AD"')}
+              ${em.label}${a.grade ? ' · ' + a.grade + '-sinf' : ''}${s ? ' · ' + s : ''}
+            </div>
+            <div style="font-size:12px;color:#B5BDD2;margin-top:1px;">${ph}</div>
+          </div>
+          <div style="font-size:11px;color:#D1D5DB;flex-shrink:0;margin-left:8px;">${new Date(a.createdAt).toLocaleDateString('uz-UZ')}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  window.alOpen = async a => {
+    if (typeof a === 'string') a = JSON.parse(a);
+    const subs = (a.applicantSubjects || []).map(x => x.subject?.name || '');
+    const eduMeta = {
+      school:  { icon: SVGI.school,  color: '#2D5BFF', label: 'Maktab' },
+      college: { icon: SVGI.college, color: '#10B981', label: 'Kollej' },
+      adult:   { icon: SVGI.adult,   color: '#8056F5', label: 'Katta' },
+    };
+    const em = eduMeta[a.educationType] || eduMeta.school;
+
+    function phoneRow(label, phone) {
+      if (!phone) return '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #F2F4F8;">
+        <span style="color:#8A93AD;font-size:14px;">${label}</span>
+        <a href="tel:${phone}" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+          <span style="font-weight:700;color:#2D5BFF;font-size:14px;">${phone}</span>
+          <div style="width:30px;height:30px;border-radius:50%;background:#2D5BFF;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${SVGI.phone}</div>
+        </a>
+      </div>`;
+    }
+
+    openModal(`${a.firstName} ${a.lastName}`, `
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #F2F4F8;">
+          <span style="color:#8A93AD;font-size:14px;display:flex;align-items:center;gap:6px;">
+            ${em.icon.replace('width="20" height="20"', 'width="16" height="16"').replace('stroke="currentColor"', `stroke="${em.color}"`)} O'qish joyi
+          </span>
+          <b style="font-size:14px;color:#0B1437;">${em.label}${a.grade ? ' · ' + a.grade + '-sinf' : ''}</b>
+        </div>
+        ${phoneRow("O'zi", a.phoneSelf)}
+        ${phoneRow('Otasi', a.phoneFather)}
+        ${phoneRow('Onasi', a.phoneMother)}
+        <div style="display:flex;justify-content:space-between;padding:11px 0;">
+          <span style="color:#8A93AD;font-size:14px;">Fanlar</span>
+          <b style="font-size:14px;color:#0B1437;">${subs.join(', ') || '—'}</b>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn bd bsm" style="gap:6px;" onclick="alDel(${a.id})">${SVGI.trash} O'chirish</button>
+        <button class="btn bp" style="flex:2;gap:6px;" onclick='alEnroll(${JSON.stringify(a).replace(/"/g, "&quot;")})'>
+          ${SVGI.enroll} Guruhga biriktirish
+        </button>
+      </div>`);
+  };
+
+  window.alDel = async id => {
+    try { await D(`/applicants/${id}`); closeModal(); toast('O\'chirildi'); load(); }
+    catch(e) { toast('✗ ' + e.message); }
+  };
+
+  window.alEnroll = async a => {
+    if (typeof a === 'string') a = JSON.parse(a);
+    const allSubjItems = (a.applicantSubjects || []);
+    if (!allSubjItems.length) return toast('Fan biriktirilmagan');
+
+    let subjItems = allSubjItems;
+    if (a.status === 'enrolled' && a.student) {
+      const enrolledSubjIds = new Set((a.student.groupStudents || [])
+        .filter(gs => gs.status === 'active')
+        .map(gs => gs.group?.subjectId || gs.group?.subject?.id));
+      const remaining = allSubjItems.filter(si => {
+        const sid = si.subjectId || si.subject?.id;
+        return !enrolledSubjIds.has(sid);
+      });
+      if (remaining.length > 0) subjItems = remaining;
+    }
+    await showEnrollPicker(a, subjItems);
+  };
+
+  async function showEnrollPicker(a, subjItems) {
+    const choices = {};
+    subjItems.forEach(si => { choices[si.subjectId || si.subject?.id] = { type: 'wait', groupId: null }; });
+    const subs2 = await G('/subjects');
+    const groupsMap = {};
+    await Promise.all(subjItems.map(async si => {
+      const sid = si.subjectId || si.subject?.id;
+      groupsMap[sid] = await G(`/groups?subjectId=${sid}`);
+    }));
+
+    openModal(`${a.firstName} ${a.lastName} — Biriktirish`,
+      '<div id="epBody"></div>' +
+      '<button class="btn bp" style="margin-top:8px;" id="epSaveBtn">' + SVGI.save + ' Saqlash</button>');
+
+    function epRender() {
+      const body = document.getElementById('epBody');
+      if (!body) return;
+      let html = '';
+      subjItems.forEach(si => {
+        const sid = si.subjectId || si.subject?.id;
+        const sName = si.subject?.name || subs2.find(s => s.id === sid)?.name || '';
+        const ch = choices[sid];
+        const gs = groupsMap[sid] || [];
+        html += `<div style="margin-bottom:16px;background:#F8F9FC;border-radius:16px;padding:14px;border:1px solid #EAEDF3;">
+          <div style="font-size:13px;font-weight:800;color:#2D5BFF;margin-bottom:10px;">${sName}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <div id="ep${sid}w" style="padding:7px 14px;border-radius:20px;border:1.5px solid ${ch.type === 'wait' ? '#2D5BFF' : '#EAEDF3'};background:${ch.type === 'wait' ? '#2D5BFF' : '#fff'};color:${ch.type === 'wait' ? '#fff' : '#525B7A'};font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Kutish</div>
+            ${gs.map(g => `<div id="ep${sid}g${g.id}" style="padding:7px 14px;border-radius:20px;border:1.5px solid ${ch.groupId === g.id ? '#2D5BFF' : '#EAEDF3'};background:${ch.groupId === g.id ? '#2D5BFF' : '#fff'};color:${ch.groupId === g.id ? '#fff' : '#525B7A'};font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">${g.name}</div>`).join('')}
+            ${gs.length === 0 ? '<span style="font-size:12px;color:#B5BDD2;padding:4px 0;">Guruh yo\'q</span>' : ''}
+          </div>
+        </div>`;
+      });
+      body.innerHTML = html;
+      subjItems.forEach(si => {
+        const sid = si.subjectId || si.subject?.id;
+        const gs = groupsMap[sid] || [];
+        document.getElementById('ep' + sid + 'w')?.addEventListener('click', () => {
+          choices[sid] = { type: 'wait', groupId: null }; epRender();
+        });
+        gs.forEach(g => {
+          document.getElementById('ep' + sid + 'g' + g.id)?.addEventListener('click', () => {
+            choices[sid] = { type: 'group', groupId: g.id }; epRender();
+          });
+        });
+      });
+    }
+    epRender();
+    document.getElementById('epSaveBtn')?.addEventListener('click', async () => {
+      const groupAssignments = Object.entries(choices)
+        .filter(([, v]) => v.type === 'group' && v.groupId)
+        .map(([, v]) => ({ groupId: v.groupId }));
+      try {
+        if (groupAssignments.length > 0) await P(`/applicants/${a.id}/enroll`, { groupAssignments });
+        closeModal();
+        toast(groupAssignments.length > 0 ? '✓ Biriktirildi' : '✓ Saqlandi');
+        load();
+      } catch(e) { toast('✗ ' + e.message); }
+    });
+  }
+
+  load();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// APPLICANTS — Qabulga yozish
+// ═══════════════════════════════════════════════════════════════
+async function rApplicants(el) {
+  const subs = await G('/subjects');
+  let selSubs = [];
+  let step = 'fan';
+
+  function drawStep1() {
+    step = 'fan';
+    el.innerHTML =
+      '<div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;">' +
+      '<div style="width:32px;height:32px;border-radius:50%;background:#2D5BFF;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;">1</div>' +
+      '<div><div style="font-size:15px;font-weight:800;color:#0B1437;">Shaxsiy ma\'lumotlar</div>' +
+      '<div style="font-size:12px;color:#8A93AD;">Ism, telefon va fanlarni kiriting</div></div>' +
+      '</div>' +
+      '<div class="ig"><label class="il">Ismi</label><input id="af_fn" class="inp" placeholder="Ismi"/></div>' +
+      '<div class="ig"><label class="il">Familyasi</label><input id="af_ln" class="inp" placeholder="Familyasi"/></div>' +
+      '<div class="ig"><label class="il">O\'qish joyi</label>' +
+      '<select id="af_edu" class="inp" onchange="afEduChg()">' +
+      `<option value="school">${SVGI.school.replace(/<[^>]*>/g,'')} Maktab</option>` +
+      '<option value="school">Maktab</option>' +
+      '<option value="college">Kollej</option>' +
+      '<option value="adult">Katta yosh</option>' +
+      '</select></div>' +
+      '<div id="af_gd" class="ig"><label class="il">Sinfi</label>' +
+      '<input id="af_grade" type="number" min="1" max="11" class="inp" placeholder="1 — 11"/></div>' +
+      '<div class="ig"><label class="il">O\'z telefoni</label><input id="af_ps" class="inp" placeholder="+998 xx xxx xx xx"/></div>' +
+      '<div class="ig"><label class="il">Otasining telefoni</label><input id="af_pf" class="inp" placeholder="+998 xx xxx xx xx"/></div>' +
+      '<div class="ig"><label class="il">Onasining telefoni</label><input id="af_pm" class="inp" placeholder="+998 xx xxx xx xx"/></div>' +
+      '<div class="ig"><label class="il">Fanlar</label>' +
+      '<div class="card" style="padding:8px 16px;margin:0;">' +
+      (subs.length === 0
+        ? '<div style="color:#8A93AD;font-size:14px;padding:8px 0;">Avval fan qo\'shire</div>'
+        : subs.map(s => `<div class="chkr" id="afrow_${s.id}" onclick="afTogSub(${s.id})">
+            <div class="chk" id="afcb_${s.id}"></div>
+            <span style="font-size:15px;font-weight:600;color:#0B1437;">${s.name}</span>
+          </div>`).join('')
+      ) +
+      '</div></div>' +
+      '<div id="af_mode" style="display:none;margin-bottom:16px;">' +
+      '<label class="il">Saqlash turi</label>' +
+      '<div style="display:flex;gap:8px;">' +
+      '<button id="modeWait" style="flex:1;padding:12px;border-radius:12px;border:2px solid #2D5BFF;background:#2D5BFF;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;">' +
+      SVGI.waiting + 'Kutish</button>' +
+      '<button id="modeEnroll" style="flex:1;padding:12px;border-radius:12px;border:2px solid #EAEDF3;background:#fff;color:#8A93AD;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;">' +
+      SVGI.enroll + 'Guruhga biriktirish</button>' +
+      '</div></div>' +
+      '<div id="af_step2_wrap" style="display:none"></div>' +
+      '<button class="btn bp" id="afSaveBtn" style="margin-top:8px;display:none;" onclick="afDoSave()">' +
+      SVGI.save + ' Saqlash</button>';
+
+    let curMode = 'wait';
+    let subData = {};
+
+    document.getElementById('modeWait')?.addEventListener('click', () => window.afSetMode('wait'));
+    document.getElementById('modeEnroll')?.addEventListener('click', () => window.afSetMode('enroll'));
+
+    window.afEduChg = () => {
+      document.getElementById('af_gd').style.display =
+        document.getElementById('af_edu').value === 'school' ? 'block' : 'none';
+    };
+
+    window.afTogSub = async id => {
+      const cb = document.getElementById('afcb_' + id);
+      const i = selSubs.indexOf(id);
+      if (i > -1) { selSubs.splice(i, 1); cb.classList.remove('on'); cb.textContent = ''; }
+      else { selSubs.push(id); cb.classList.add('on'); cb.textContent = '✓'; }
+      const modeEl = document.getElementById('af_mode');
+      if (modeEl) modeEl.style.display = selSubs.length > 0 ? 'block' : 'none';
+      const saveBtn = document.getElementById('afSaveBtn');
+      if (saveBtn) saveBtn.style.display = selSubs.length > 0 ? 'flex' : 'none';
+      if (curMode === 'enroll') await renderStep2();
+    };
+
+    window.afSetMode = async mode => {
+      curMode = mode;
+      const waitBtn = document.getElementById('modeWait');
+      const enrollBtn = document.getElementById('modeEnroll');
+      if (waitBtn) {
+        waitBtn.style.background = mode === 'wait' ? '#2D5BFF' : '#fff';
+        waitBtn.style.color = mode === 'wait' ? '#fff' : '#8A93AD';
+        waitBtn.style.borderColor = mode === 'wait' ? '#2D5BFF' : '#EAEDF3';
+      }
+      if (enrollBtn) {
+        enrollBtn.style.background = mode === 'enroll' ? '#2D5BFF' : '#fff';
+        enrollBtn.style.color = mode === 'enroll' ? '#fff' : '#8A93AD';
+        enrollBtn.style.borderColor = mode === 'enroll' ? '#2D5BFF' : '#EAEDF3';
+      }
+      const wrap = document.getElementById('af_step2_wrap');
+      if (mode === 'enroll') { wrap.style.display = 'block'; await renderStep2(); }
+      else { wrap.style.display = 'none'; }
+    };
+
+    async function renderStep2() {
+      const wrap = document.getElementById('af_step2_wrap');
+      if (!wrap || !selSubs.length) { if (wrap) wrap.innerHTML = ''; return; }
+      const subMap = {}; subs.forEach(s => subMap[s.id] = s.name);
+      await Promise.all(selSubs.map(async sid => {
+        if (subData[sid]) return;
+        const subName = subMap[sid] || '';
+        const [teachers, groups] = await Promise.all([
+          G('/staff/teachers?subject=' + encodeURIComponent(subName)),
+          G('/groups?subjectId=' + sid)
+        ]);
+        subData[sid] = { subName, teachers, groups, selTeacher: null, selGroup: null };
+      }));
+      let html = '<div class="st" style="margin-top:8px;">GURUH BIRIKTIRISH</div>';
+      selSubs.forEach(sid => {
+        const d = subData[sid]; if (!d) return;
+        html += `<div style="background:#F8F9FC;border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid #EAEDF3;">
+          <div style="font-size:13px;font-weight:800;color:#2D5BFF;margin-bottom:10px;">${d.subName}</div>
+          <div class="ig" style="margin-bottom:10px;"><label class="il">O'qituvchi</label>
+            <select id="at_${sid}" class="inp" onchange="afTeacherChg(${sid})">
+              <option value="">O'qituvchi tanlang</option>
+              ${d.teachers.map(t => `<option value="${t.id}">${t.firstName} ${t.lastName}</option>`).join('')}
+            </select>
+          </div>
+          <div class="ig" style="margin-bottom:0;"><label class="il">Guruh</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;" id="ag_${sid}">
+              <div class="gpill on" id="agwait_${sid}" onclick="afPickG(${sid},null)">Kutish</div>
+              ${d.groups.map(g => `<div class="gpill${d.selGroup === g.id ? ' on' : ''}" id="agg_${sid}_${g.id}" onclick="afPickG(${sid},${g.id})">${g.name}</div>`).join('')}
+              ${d.groups.length === 0 ? '<span style="font-size:12px;color:#B5BDD2;">Guruhlar yo\'q</span>' : ''}
+            </div>
+          </div>
+        </div>`;
+      });
+      wrap.innerHTML = html;
+      window.afTeacherChg = sid => { if (subData[sid]) subData[sid].selTeacher = document.getElementById('at_' + sid).value; };
+      window.afPickG = (sid, gid) => {
+        if (subData[sid]) subData[sid].selGroup = gid;
+        const waitBtn = document.getElementById('agwait_' + sid);
+        if (waitBtn) waitBtn.classList.toggle('on', gid === null);
+        if (subData[sid]) {
+          subData[sid].groups.forEach(g => {
+            const btn = document.getElementById('agg_' + sid + '_' + g.id);
+            if (btn) btn.classList.toggle('on', gid === g.id);
+          });
+        }
+      };
+    }
+
+    window.afDoSave = async () => {
+      if (!afValidate()) return;
+      if (!selSubs.length) return toast('Kamida bitta fan tanlang');
+      const body = afBody();
+      body.subjectIds = selSubs;
+      try {
+        const app = await P('/applicants', body);
+        if (curMode === 'enroll') {
+          const asn = selSubs
+            .map(sid => subData[sid]?.selGroup ? { groupId: subData[sid].selGroup } : null)
+            .filter(Boolean);
+          if (asn.length) await P('/applicants/' + app.id + '/enroll', { groupAssignments: asn });
+          toast(asn.length ? '✓ Guruhga biriktirildi' : '✓ Saqlandi');
+        } else {
+          toast('✓ Kutish holatida saqlandi');
+        }
+        nav('applist');
+      } catch(e) { toast('✗ ' + e.message); }
+    };
+  }
+
+  function afValidate() {
+    if (!document.getElementById('af_fn')?.value.trim()) return (toast('Ism kerak'), false);
+    if (!document.getElementById('af_ln')?.value.trim()) return (toast('Familya kerak'), false);
+    const ps = document.getElementById('af_ps')?.value.trim();
+    const pf = document.getElementById('af_pf')?.value.trim();
+    const pm = document.getElementById('af_pm')?.value.trim();
+    if (!ps && !pf && !pm) return (toast('Kamida bitta telefon kerak'), false);
+    return true;
+  }
+
+  function afBody() {
+    return {
+      firstName: document.getElementById('af_fn').value.trim(),
+      lastName: document.getElementById('af_ln').value.trim(),
+      educationType: document.getElementById('af_edu').value,
+      grade: document.getElementById('af_grade')?.value || '',
+      phoneSelf: document.getElementById('af_ps').value.trim(),
+      phoneFather: document.getElementById('af_pf').value.trim(),
+      phoneMother: document.getElementById('af_pm').value.trim(),
+      subjectIds: selSubs
+    };
+  }
+
+  drawStep1();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GROUPS — Guruhlar (to'lov narxi inputi olib tashlangan)
+// ═══════════════════════════════════════════════════════════════
+async function rGroups(el) {
+  async function load() {
+    const gs = await G('/groups');
+    el.innerHTML = `
+      <button class="btn bp" style="margin-bottom:14px;" onclick="openAddGroup()">
+        ${SVGI.plus} Guruh qo'shish
+      </button>
+      <div class="card" style="padding:0;overflow:hidden;">
+        ${gs.length === 0
+          ? `<div style="padding:24px;text-align:center;color:#8A93AD;">Guruhlar yo'q</div>`
+          : gs.map(g => `
+            <div class="li" onclick="gOpen(${g.id})">
+              <div class="lic" style="background:#E6F8F0;">
+                ${SVGI.groups.replace('stroke="currentColor"', 'stroke="#10B981"')}
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;font-weight:700;color:#0B1437;">${g.name}</div>
+                <div style="font-size:12px;color:#8A93AD;margin-top:2px;">
+                  ${g.subject?.name} · ${g.teacher?.firstName || ''} ${g.teacher?.lastName || ''}
+                </div>
+              </div>
+              <div style="text-align:right;margin-left:10px;">
+                <div style="font-size:22px;font-weight:800;color:#2D5BFF;">${g._count?.groupStudents || 0}</div>
+                <div style="font-size:10px;color:#8A93AD;font-weight:600;">o'quvchi</div>
+              </div>
+            </div>`).join('')}
+      </div>`;
+  }
+
+  window.openAddGroup = async () => {
+    const subs = await G('/subjects');
+    openModal("Guruh qo'shish", `
+      <div class="ig"><label class="il">Fan</label>
+        <select id="gg_sub" class="inp" onchange="ggSubChange()">
+          <option value="">Fan tanlang</option>
+          ${subs.map(s => `<option value="${s.id}" data-name="${s.name}">${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ig"><label class="il">O'qituvchi</label>
+        <select id="gg_teacher" class="inp"><option value="">Avval fan tanlang</option></select>
+      </div>
+      <div class="ig"><label class="il">Guruh nomi</label>
+        <input id="gg_name" class="inp" placeholder="Guruh-A"/>
+      </div>
+      <button class="btn bp" onclick="saveGroup()">${SVGI.save} Yaratish</button>`);
+
+    window.ggSubChange = async () => {
+      const sel = document.getElementById('gg_sub');
+      const sName = sel.options[sel.selectedIndex]?.dataset.name;
+      if (!sName) return;
+      const teachers = await G(`/staff/teachers?subject=${encodeURIComponent(sName)}`);
+      document.getElementById('gg_teacher').innerHTML =
+        `<option value="">O'qituvchi tanlang</option>` +
+        teachers.map(t => `<option value="${t.id}">${t.firstName} ${t.lastName}</option>`).join('');
+    };
+
+    window.saveGroup = async () => {
+      const body = {
+        subjectId: document.getElementById('gg_sub').value,
+        teacherId: document.getElementById('gg_teacher').value,
+        name: document.getElementById('gg_name').value.trim()
+      };
+      if (!body.subjectId) return toast('Fan tanlang');
+      if (!body.teacherId) return toast("O'qituvchi tanlang");
+      if (!body.name) return toast('Guruh nomi kerak');
+      try { await P('/groups', body); closeModal(); toast('✓ Yaratildi'); load(); }
+      catch(e) { toast('✗ ' + e.message); }
+    };
+  };
+
+  window.gOpen = async id => {
+    const [gs2, sts] = await Promise.all([G('/groups'), G(`/groups/${id}/students`)]);
+    const g = gs2.find(x => x.id === id);
+    openModal(g?.name || 'Guruh', `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <div style="font-size:13px;color:#8A93AD;">${g?.subject?.name} · ${g?.teacher?.firstName || ''} ${g?.teacher?.lastName || ''}</div>
+      </div>
+      <div class="st">O'QUVCHILAR (${sts.length})</div>
+      <div style="max-height:340px;overflow-y:auto;">
+        ${sts.length === 0
+          ? `<div style="text-align:center;padding:24px;color:#8A93AD;">O'quvchilar yo'q</div>`
+          : sts.map((s, i) => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F2F4F8;">
+              <div style="width:30px;height:30px;border-radius:50%;background:#EAF0FF;color:#2D5BFF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${i + 1}</div>
+              <div>
+                <div style="font-weight:700;font-size:14px;color:#0B1437;">${s.firstName} ${s.lastName}</div>
+                <div style="font-size:12px;color:#8A93AD;">${s.phoneSelf || s.phoneFather || '—'}</div>
+              </div>
+            </div>`).join('')}
+      </div>`);
+  };
+
+  load();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRICING — Narxlar bo'limi
+// ═══════════════════════════════════════════════════════════════
+async function rPricing(el) {
+  const months = sixMonths();
+  let selMonth = nowMonth();
+  let selGroupId = null;
+  let groups = [];
+
+  async function loadGroups() {
+    groups = await G('/groups');
+    drawMain();
+  }
+
+  function drawMain() {
+    const monthHtml = months.map(m => `
+      <div class="mpb${m === selMonth ? ' on' : ''}" onclick="prSetMonth('${m}')">${mLabel(m)}</div>
+    `).join('');
+
+    const groupHtml = groups.length === 0
+      ? `<div style="padding:24px;text-align:center;color:#8A93AD;">Guruhlar yo'q</div>`
+      : groups.map(g => `
+          <div class="li" id="prg${g.id}" onclick="prSetGroup(${g.id})">
+            <div class="lic" style="background:#E6F8F0;">${SVGI.groups.replace('stroke="currentColor"','stroke="#10B981"')}</div>
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:700;color:#0B1437;">${g.name}</div>
+              <div style="font-size:12px;color:#8A93AD;">${g.subject?.name || ''} · ${g._count?.groupStudents || 0} o'quvchi</div>
+            </div>
+            ${SVGI.chevron}
+          </div>`).join('');
+
+    el.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <div class="st">OY TANLANG</div>
+        <div class="mp">${monthHtml}</div>
+      </div>
+      <div class="st">GURUH TANLANG</div>
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px;">${groupHtml}</div>
+      <div id="prResult"></div>`;
+
+    if (selGroupId) {
+      const li = document.getElementById('prg' + selGroupId);
+      if (li) li.style.background = '#EFF6FF';
+      loadPricingTable(selGroupId);
+    }
+
+    window.prSetMonth = m => {
+      selMonth = m;
+      document.querySelectorAll('.mp .mpb').forEach(b => {
+        const bm = b.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        if (bm) b.classList.toggle('on', bm === m);
+      });
+      if (selGroupId) loadPricingTable(selGroupId);
+    };
+
+    window.prSetGroup = gid => {
+      selGroupId = gid;
+      document.querySelectorAll('[id^="prg"]').forEach(li => {
+        li.style.background = li.id === 'prg' + gid ? '#EFF6FF' : '';
+      });
+      loadPricingTable(gid);
+    };
+  }
+
+  async function loadPricingTable(gid) {
+    const res = document.getElementById('prResult');
+    if (!res) return;
+    res.innerHTML = ldHtml();
+
+    try {
+      const data = await G(`/pricing/group/${gid}?monthYear=${selMonth}`);
+
+      if (!data.length) {
+        res.innerHTML = `<div style="text-align:center;padding:32px;color:#8A93AD;">Bu guruhda o'quvchilar yo'q</div>`;
+        return;
+      }
+
+      // Pending o'zgarishlar: { studentId → newPrice }
+      const pendingPrices = {};
+      data.forEach(d => { pendingPrices[d.studentId] = d.price !== null ? d.price : ''; });
+
+      function renderTable() {
+        const g = groups.find(x => x.id === gid);
+        res.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div>
+              <div style="font-size:15px;font-weight:800;color:#0B1437;">${g?.name || ''} — ${mLabel(selMonth)}</div>
+              <div style="font-size:12px;color:#8A93AD;margin-top:2px;">
+                ${SVGI.tag.replace('width="16" height="16"', 'width="13" height="13"')}
+                Narx belgilanmasa — oldingi oydagi narx avtomatik davom etadi
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:0;overflow:hidden;">
+            ${data.map((d, idx) => {
+              const rowBg = idx % 2 === 0 ? '#fff' : '#FAFBFD';
+              const carriedHtml = d.isCarriedForward && d.priceMonth
+                ? `<span class="carried-badge">← ${mLabel(d.priceMonth)}</span>`
+                : '';
+              return `
+                <div class="price-row" style="background:${rowBg};">
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:700;color:#0B1437;">${d.firstName} ${d.lastName}</div>
+                    <div style="font-size:11px;color:#8A93AD;margin-top:2px;display:flex;align-items:center;gap:4px;">
+                      ${carriedHtml}
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    class="price-input"
+                    id="pr_inp_${d.studentId}"
+                    value="${pendingPrices[d.studentId] !== '' ? pendingPrices[d.studentId] : ''}"
+                    placeholder="${d.isCarriedForward && d.price ? d.price.toLocaleString('ru-RU') : 'Narx...'}"
+                    oninput="prUpdateVal(${d.studentId}, this.value)"
+                  />
+                </div>`;
+            }).join('')}
+          </div>
+
+          <!-- Hammaga bir narx -->
+          <div style="background:#F8F9FC;border-radius:14px;padding:14px;margin-top:12px;border:1px solid #EAEDF3;">
+            <div style="font-size:12px;font-weight:800;color:#8A93AD;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">
+              Hammaga bir xil narx belgilash
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="number" id="pr_bulk_val" class="inp" placeholder="300 000" style="flex:1;font-weight:700;"/>
+              <button onclick="prApplyBulk(${gid})"
+                style="padding:12px 16px;border-radius:12px;border:none;background:#2D5BFF;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;">
+                Qo'llash
+              </button>
+            </div>
+          </div>
+
+          <!-- Saqlash -->
+          <button onclick="prSaveAll(${gid})"
+            style="width:100%;margin-top:14px;padding:14px;border-radius:14px;border:none;
+                   background:#2D5BFF;color:#fff;font-size:15px;font-weight:700;
+                   cursor:pointer;font-family:inherit;display:flex;align-items:center;
+                   justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(45,91,255,.3);"
+            onmouseenter="this.style.background='#1A3FCE';"
+            onmouseleave="this.style.background='#2D5BFF';">
+            ${SVGI.save} Narxlarni Saqlash
+          </button>
+
+          <div style="text-align:center;margin-top:10px;font-size:11px;color:#B5BDD2;line-height:1.6;">
+            Keyingi oylar uchun narx qayta belgilanmasa — bu oydagi narx avtomatik davom etadi
+          </div>`;
+
+        window.prUpdateVal = (sid, val) => {
+          pendingPrices[sid] = val === '' ? '' : parseInt(val) || 0;
+        };
+
+        window.prApplyBulk = gid2 => {
+          const val = document.getElementById('pr_bulk_val')?.value;
+          if (!val) return toast('Narxni kiriting');
+          const price = parseInt(val);
+          data.forEach(d => {
+            pendingPrices[d.studentId] = price;
+            const inp = document.getElementById('pr_inp_' + d.studentId);
+            if (inp) inp.value = price;
+          });
+          toast('✓ Barcha o\'quvchilarga qo\'llandi');
+        };
+
+        window.prSaveAll = async gid2 => {
+          const prices = data
+            .filter(d => pendingPrices[d.studentId] !== '' && pendingPrices[d.studentId] !== null && pendingPrices[d.studentId] !== undefined)
+            .map(d => ({ studentId: d.studentId, price: parseInt(pendingPrices[d.studentId]) || 0 }));
+
+          if (!prices.length) return toast('Hech qanday narx kiritilmagan');
+
+          try {
+            await P('/pricing/set-bulk', { groupId: gid2, monthYear: selMonth, prices });
+            toast('✓ Narxlar saqlandi');
+            loadPricingTable(gid2);
+          } catch(e) { toast('✗ ' + e.message); }
+        };
+      }
+
+      renderTable();
+
+    } catch(e) {
+      res.innerHTML = `<div style="text-align:center;padding:32px;color:#EF4444;">Xatolik: ${e.message}</div>`;
+    }
+  }
+
+  loadGroups();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAYMENTS — To'lovlar (targetAmount olib tashlangan, pricing dan olinadi)
+// ═══════════════════════════════════════════════════════════════
+async function rPayments(el) {
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  // ── SVG ikonlar ──────────────────────────────────────────────────
+  const ICO = {
+    search:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+    user:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2D5BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    cash:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>`,
+    card:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
+    wallet:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/></svg>`,
+    save:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    chevron: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
+    info:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    plus:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  };
+
+  function fmtSum(n) { return Number(n).toLocaleString('ru-RU') + " so'm"; }
+  function nowM() {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  }
+
+  // ── Asosiy sahifa: faqat qidiruv ─────────────────────────────────
+  el.innerHTML = `
+    <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:.6px;
+                text-transform:uppercase;margin-bottom:10px;font-family:${FONT};">
+      O'quvchini qidiring
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;background:#F3F4F6;
+                border-radius:14px;padding:11px 14px;margin-bottom:16px;">
+      ${ICO.search}
+      <input id="paySearch" placeholder="Ism yoki familya..." autocomplete="off"
+        style="border:none;background:transparent;outline:none;font-size:15px;
+               flex:1;font-family:${FONT};color:#0B1437;"
+        oninput="payDoSearch(this.value)"/>
+    </div>
+    <div id="paySearchRes"></div>
+    <div id="payForm"></div>`;
+
+  // ── Qidiruv ───────────────────────────────────────────────────────
+  let searchTimer;
+  window.payDoSearch = v => {
+    clearTimeout(searchTimer);
+    const res = document.getElementById('paySearchRes');
+    if (v.length < 2) { res.innerHTML = ''; return; }
+    res.innerHTML = `<div style="padding:20px;text-align:center;">
+      <div style="width:24px;height:24px;border:2.5px solid #EAEDF3;border-top-color:#2D5BFF;
+                  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;"></div>
+    </div>`;
+    searchTimer = setTimeout(async () => {
+      try {
+        const sts = await G(`/students/search-with-balance?q=${encodeURIComponent(v)}`);
+        if (!sts.length) {
+          res.innerHTML = `<div style="text-align:center;padding:24px;color:#8A93AD;font-family:${FONT};font-size:13px;">Topilmadi</div>`;
+          return;
+        }
+        res.innerHTML = `<div style="background:#fff;border-radius:18px;border:1.5px solid #EAEDF3;overflow:hidden;">
+          ${sts.map(s => {
+            const balColor = s.balance >= 0 ? '#10B981' : '#EF4444';
+            const balBg = s.balance >= 0 ? '#E6F8F0' : '#FCEDEC';
+            const balStr = (s.balance >= 0 ? '+' : '') + fmtSum(s.balance);
+            return `<div onclick="paySelectStudent(${s.id}, '${s.firstName} ${s.lastName}')"
+                      style="display:flex;align-items:center;padding:13px 14px;cursor:pointer;
+                             border-bottom:1px solid #F2F4F8;transition:background .1s;"
+                      onmouseenter="this.style.background='#F5F7FB'"
+                      onmouseleave="this.style.background='#fff'">
+              <div style="width:40px;height:40px;border-radius:13px;background:#EAF0FF;
+                          display:flex;align-items:center;justify-content:center;
+                          flex-shrink:0;margin-right:11px;">
+                ${ICO.user}
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:700;color:#0B1437;font-family:${FONT};">
+                  ${s.firstName} ${s.lastName}
+                </div>
+                <div style="font-size:11.5px;color:#8A93AD;margin-top:2px;font-family:${FONT};">
+                  ${s.groups.map(g => g.subjectName).join(', ')}
+                </div>
+              </div>
+              <div style="text-align:right;flex-shrink:0;margin-left:8px;">
+                <div style="font-size:12px;font-weight:800;color:${balColor};
+                            background:${balBg};padding:3px 8px;border-radius:8px;
+                            font-family:${FONT};">${balStr}</div>
+                <div style="font-size:10px;color:#B5BDD2;margin-top:2px;font-family:${FONT};">balans</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+      } catch(e) {
+        res.innerHTML = `<div style="text-align:center;padding:20px;color:#EF4444;font-family:${FONT};">Xatolik: ${e.message}</div>`;
+      }
+    }, 350);
+  };
+
+  // ── O'quvchi tanlaganda to'lov formasini ko'rsatish ───────────────
+  window.paySelectStudent = async (studentId, studentName) => {
+    document.getElementById('paySearchRes').innerHTML = '';
+    const searchInp = document.getElementById('paySearch');
+    if (searchInp) searchInp.value = '';
+
+    const formEl = document.getElementById('payForm');
+    formEl.innerHTML = `<div style="padding:20px;text-align:center;">
+      <div style="width:24px;height:24px;border:2.5px solid #EAEDF3;border-top-color:#2D5BFF;
+                  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;"></div>
+    </div>`;
+
+    try {
+      // O'quvchi balansi va guruh ma'lumotlari
+      const balData = await G(`/students/${studentId}/balance`);
+      const curMonth = nowM();
+
+      let pt = 'cash';
+      let selGroupId = null;
+
+      function renderForm() {
+        const balColor = balData.balance >= 0 ? '#10B981' : '#EF4444';
+        const balBg    = balData.balance >= 0 ? '#E6F8F0' : '#FCEDEC';
+        const balStr   = (balData.balance >= 0 ? '+' : '') + fmtSum(balData.balance);
+
+        formEl.innerHTML = `
+          <!-- O'quvchi kartochkasi + balans -->
+          <div style="background:#fff;border-radius:18px;border:1.5px solid #EAEDF3;
+                      padding:16px;margin-bottom:16px;font-family:${FONT};">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:46px;height:46px;border-radius:14px;background:#EAF0FF;
+                          display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                ${ICO.user}
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:15px;font-weight:800;color:#0B1437;">${studentName}</div>
+                <div style="font-size:12px;color:#8A93AD;margin-top:2px;">
+                  ${balData.groupDetails.map(g => g.groupName).join(', ')}
+                </div>
+              </div>
+              <!-- Joriy balans -->
+              <div style="text-align:right;">
+                <div style="font-size:14px;font-weight:800;color:${balColor};
+                            background:${balBg};padding:6px 10px;border-radius:10px;
+                            ${balData.balance < 0 ? 'border:1.5px solid #FECACA;' : ''}">
+                  ${balStr}
+                </div>
+                <div style="font-size:10px;color:#B5BDD2;margin-top:3px;">joriy balans</div>
+              </div>
+            </div>
+
+            ${balData.balance < 0 ? `
+            <!-- Qizil ogohlantirish -->
+            <div style="margin-top:12px;background:#FCEDEC;border-radius:10px;
+                        padding:9px 12px;display:flex;align-items:center;gap:7px;">
+              ${ICO.info.replace('currentColor','#EF4444')}
+              <span style="font-size:12px;font-weight:700;color:#EF4444;">
+                Balans minus! O'quvchi ${fmtSum(Math.abs(balData.balance))} qarzdor.
+              </span>
+            </div>` : ''}
+
+            <!-- Guruh tafsilotlari -->
+            ${balData.groupDetails.map(g => {
+              const price = g.currentMonthPrice;
+              const paid  = g.currentMonthPaid;
+              return `
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid #F2F4F8;">
+                  <div style="font-size:12px;font-weight:700;color:#0B1437;">${g.groupName} — ${g.subjectName}</div>
+                  ${price ? `
+                  <div style="font-size:11px;color:#8A93AD;margin-top:3px;">
+                    ${curMonth} uchun narx: <b style="color:#2D5BFF;">${fmtSum(price)}</b>
+                    ${paid > 0 ? ` · To'lagan: <b style="color:#10B981;">${fmtSum(paid)}</b>` : ''}
+                  </div>` : '<div style="font-size:11px;color:#B5BDD2;margin-top:2px;">Bu oy uchun narx belgilanmagan</div>'}
+                </div>`;
+            }).join('')}
+          </div>
+
+          <!-- Guruh tanlash -->
+          <div class="ig">
+            <label class="il">Guruh</label>
+            <select id="payGroupSel" class="inp" onchange="payGroupChanged(this.value)"
+              style="font-family:${FONT};">
+              <option value="">Guruh tanlang</option>
+              ${balData.groupDetails.map(g =>
+                `<option value="${g.groupId}">${g.groupName} — ${g.subjectName}${g.currentMonthPrice ? ' (' + fmtSum(g.currentMonthPrice) + ')' : ''}</option>`
+              ).join('')}
+            </select>
+          </div>
+
+          <!-- Summa -->
+          <div class="ig">
+            <label class="il">To'lov summasi (so'm)</label>
+            <input id="payAmount" type="number" class="inp" placeholder="300 000"
+              style="font-size:22px;font-weight:800;font-family:${FONT};"
+              oninput="payAmtLive(this.value)"/>
+            <div id="payAmtFmt" style="text-align:center;font-size:18px;font-weight:700;
+                                        color:#2D5BFF;padding:6px 0;display:none;
+                                        font-family:${FONT};"></div>
+          </div>
+
+          <!-- To'lov turi -->
+          <div class="ig">
+            <label class="il">To'lov turi</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <!-- Naqd -->
+              <button id="payBtnCash" onclick="paySetPT('cash')"
+                style="padding:13px;border-radius:14px;border:2px solid #2D5BFF;
+                       background:#2D5BFF;color:#fff;font-size:14px;font-weight:700;
+                       cursor:pointer;font-family:${FONT};
+                       display:flex;align-items:center;justify-content:center;gap:8px;">
+                ${ICO.cash.replace('currentColor','#fff')} Naqd pul
+              </button>
+              <!-- Karta -->
+              <button id="payBtnCard" onclick="paySetPT('card')"
+                style="padding:13px;border-radius:14px;border:2px solid #EAEDF3;
+                       background:#fff;color:#8A93AD;font-size:14px;font-weight:700;
+                       cursor:pointer;font-family:${FONT};
+                       display:flex;align-items:center;justify-content:center;gap:8px;">
+                ${ICO.card} Bank kartasi
+              </button>
+            </div>
+          </div>
+
+          <!-- Saqlash -->
+          <button onclick="paySave(${studentId})"
+            style="width:100%;padding:14px;border-radius:14px;border:none;
+                   background:#2D5BFF;color:#fff;font-size:15px;font-weight:700;
+                   cursor:pointer;font-family:${FONT};margin-top:4px;
+                   display:flex;align-items:center;justify-content:center;gap:8px;
+                   box-shadow:0 4px 12px rgba(45,91,255,.3);"
+            onmouseenter="this.style.background='#1A3FCE';"
+            onmouseleave="this.style.background='#2D5BFF';">
+            ${ICO.save} To'lovni Saqlash
+          </button>
+
+          <!-- Bekor qilish -->
+          <button onclick="payCancelForm()"
+            style="width:100%;padding:11px;border-radius:14px;border:1.5px solid #EAEDF3;
+                   background:#fff;color:#525B7A;font-size:14px;font-weight:700;
+                   cursor:pointer;font-family:${FONT};margin-top:8px;">
+            Bekor qilish
+          </button>`;
+
+        // Event bindings
+        window.payGroupChanged = gid => { selGroupId = parseInt(gid) || null; };
+        window.payAmtLive = v => {
+          const e = document.getElementById('payAmtFmt');
+          if (e) { if (v) { e.style.display = 'block'; e.textContent = fmtSum(parseInt(v) || 0); } else e.style.display = 'none'; }
+        };
+        window.paySetPT = t => {
+          pt = t;
+          const cashBtn = document.getElementById('payBtnCash');
+          const cardBtn = document.getElementById('payBtnCard');
+          if (cashBtn) {
+            cashBtn.style.background = t === 'cash' ? '#2D5BFF' : '#fff';
+            cashBtn.style.color = t === 'cash' ? '#fff' : '#8A93AD';
+            cashBtn.style.borderColor = t === 'cash' ? '#2D5BFF' : '#EAEDF3';
+          }
+          if (cardBtn) {
+            cardBtn.style.background = t === 'card' ? '#2D5BFF' : '#fff';
+            cardBtn.style.color = t === 'card' ? '#fff' : '#8A93AD';
+            cardBtn.style.borderColor = t === 'card' ? '#2D5BFF' : '#EAEDF3';
+          }
+        };
+        window.payCancelForm = () => {
+          document.getElementById('payForm').innerHTML = '';
+          const inp = document.getElementById('paySearch');
+          if (inp) { inp.value = ''; inp.focus(); }
+        };
+        window.paySave = async sid => {
+          const amt = document.getElementById('payAmount')?.value;
+          if (!amt || parseInt(amt) <= 0) return toast('To\'lov summasini kiriting');
+          if (!selGroupId) return toast('Guruh tanlang');
+          try {
+            await P('/payments', {
+              studentId: sid,
+              groupId: selGroupId,
+              monthYear: nowM(),
+              amount: parseInt(amt),
+              paymentType: pt
+            });
+            toast('✓ To\'lov saqlandi');
+            document.getElementById('payForm').innerHTML = '';
+            const inp = document.getElementById('paySearch');
+            if (inp) { inp.value = ''; }
+          } catch(e) { toast('✗ ' + e.message); }
+        };
+      }
+
+      renderForm();
+    } catch(e) {
+      formEl.innerHTML = `<div style="text-align:center;padding:24px;color:#EF4444;font-family:${FONT};">Xatolik: ${e.message}</div>`;
+    }
+  };
+}
+
+async function rExpenses(el) {
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  const ICO = {
+    staff:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    communal: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    other:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="12" r="2"/></svg>`,
+    cash:     `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>`,
+    card:     `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
+    search:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+    save:     `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    electric: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+    water:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
+    tax:      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>`,
+  };
+
+  const staff = await G('/staff');
+  let cat = 'staff', comm = 'Soliq', pt = 'cash', staffSelId = null;
+  const months = (typeof sixMonths === 'function') ? sixMonths() : [];
+  let sm = (typeof nowMonth === 'function') ? nowMonth() : '';
+
+  // Staff filter
+  let staffSearchQ = '';
+  function filteredStaff() {
+    if (!staffSearchQ) return staff;
+    const q = staffSearchQ.toLowerCase();
+    return staff.filter(s => `${s.firstName} ${s.lastName}`.toLowerCase().includes(q) || (s.subject || '').toLowerCase().includes(q));
+  }
+
+  function fmtSum(n) { return Number(n).toLocaleString('ru-RU') + " so'm"; }
+
+  function draw() {
+    const monthPills = months.map(m =>
+      `<button class="mpb${m === sm ? ' on' : ''}" onclick="xm('${m}')"
+        style="flex-shrink:0;font-family:${FONT};">${(typeof mLabel === 'function') ? mLabel(m) : m}</button>`
+    ).join('');
+
+    el.innerHTML = `
+      <!-- Kategoriya tablar -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        ${[
+          { id: 'staff',    label: 'Hodim Maoshi',  ico: ICO.staff },
+          { id: 'communal', label: 'Kommunal',       ico: ICO.communal },
+          { id: 'other',    label: 'Boshqa',         ico: ICO.other },
+        ].map(t => `
+          <button onclick="xc('${t.id}')"
+            style="flex:1;padding:11px 6px;border-radius:14px;
+                   border:${cat === t.id ? 'none' : '1.5px solid #EAEDF3'};
+                   background:${cat === t.id ? '#2D5BFF' : '#fff'};
+                   color:${cat === t.id ? '#fff' : '#525B7A'};
+                   font-size:12px;font-weight:700;cursor:pointer;font-family:${FONT};
+                   display:flex;flex-direction:column;align-items:center;gap:5px;
+                   ${cat === t.id ? 'box-shadow:0 4px 10px rgba(45,91,255,.25);' : ''}">
+            ${t.ico.replace('stroke="currentColor"', `stroke="${cat === t.id ? '#fff' : '#525B7A'}"`)}
+            ${t.label}
+          </button>`
+        ).join('')}
+      </div>
+
+      ${cat === 'staff' ? `
+      <!-- Hodim qidirish -->
+      <div class="ig">
+        <label class="il">Hodim</label>
+        <div style="display:flex;align-items:center;gap:8px;background:#F3F4F6;
+                    border-radius:12px;padding:10px 14px;margin-bottom:8px;">
+          ${ICO.search}
+          <input id="xStaffSearch" placeholder="Ism yoki fan bo'yicha qidirish..." autocomplete="off"
+            style="border:none;background:transparent;outline:none;font-size:14px;
+                   flex:1;font-family:${FONT};color:#0B1437;"
+            oninput="xStaffFilter(this.value)"/>
+        </div>
+        <div id="xStaffList" style="background:#fff;border-radius:14px;border:1.5px solid #EAEDF3;
+                                     max-height:220px;overflow-y:auto;display:none;">
+          ${filteredStaff().map(s => `
+            <div id="xst${s.id}" onclick="xStaffPick(${s.id}, '${s.firstName} ${s.lastName}')"
+                 style="padding:11px 14px;cursor:pointer;font-size:14px;font-weight:600;
+                        color:#0B1437;border-bottom:1px solid #F2F4F8;font-family:${FONT};
+                        display:flex;align-items:center;gap:8px;"
+                 onmouseenter="this.style.background='#F5F7FB'"
+                 onmouseleave="this.style.background='#fff'">
+              <div style="width:32px;height:32px;border-radius:10px;background:#EAF0FF;
+                          display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                ${ICO.staff.replace('width="20" height="20"','width="16" height="16"').replace('stroke="currentColor"','stroke="#2D5BFF"')}
+              </div>
+              <div>
+                <div>${s.firstName} ${s.lastName}</div>
+                ${s.subject ? `<div style="font-size:11px;color:#8A93AD;">${s.subject}</div>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>
+        <div id="xStaffPicked" style="display:none;"></div>
+      </div>
+
+      <!-- Oy -->
+      <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;font-family:${FONT};">Oy</div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scrollbar-width:none;">${monthPills}</div>
+      ` : ''}
+
+      ${cat === 'communal' ? `
+      <!-- Kommunal tur -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+        ${[
+          { id: 'Soliq',  ico: ICO.tax,      color: '#8056F5', bg: '#F0EAFE' },
+          { id: 'Elektr', ico: ICO.electric, color: '#F59E0B', bg: '#FEF4E0' },
+          { id: 'Suv',    ico: ICO.water,    color: '#0EA5E9', bg: '#E3F4FB' },
+        ].map(t => `
+          <button onclick="xco('${t.id}')"
+            style="padding:12px 8px;border-radius:14px;
+                   border:${comm === t.id ? 'none' : '1.5px solid #EAEDF3'};
+                   background:${comm === t.id ? t.bg : '#fff'};
+                   color:${comm === t.id ? t.color : '#8A93AD'};
+                   font-size:12px;font-weight:700;cursor:pointer;font-family:${FONT};
+                   display:flex;flex-direction:column;align-items:center;gap:6px;
+                   ${comm === t.id ? `box-shadow:0 0 0 1.5px ${t.color};` : ''}">
+            ${t.ico.replace('stroke="currentColor"', `stroke="${comm === t.id ? t.color : '#8A93AD'}"`)}
+            ${t.id}
+          </button>`
+        ).join('')}
+      </div>
+      <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;font-family:${FONT};">Oy</div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scrollbar-width:none;">${monthPills}</div>
+      ` : ''}
+
+      <!-- Summa -->
+      <div class="ig">
+        <label class="il">Summa (so'm)</label>
+        <input id="xa" type="number" class="inp" style="font-size:22px;font-weight:800;font-family:${FONT};"
+          placeholder="500 000" oninput="xf(this.value)"/>
+        <div id="xfd" style="text-align:center;font-size:18px;font-weight:700;color:#2D5BFF;
+                              padding:6px 0;display:none;font-family:${FONT};"></div>
+      </div>
+
+      <!-- To'lov turi -->
+      <div class="ig">
+        <label class="il">To'lov turi</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <button id="xBtnCash" onclick="xt('cash')"
+            style="padding:12px;border-radius:14px;border:2px solid #2D5BFF;
+                   background:#2D5BFF;color:#fff;font-size:14px;font-weight:700;
+                   cursor:pointer;font-family:${FONT};
+                   display:flex;align-items:center;justify-content:center;gap:8px;">
+            ${ICO.cash.replace('stroke="currentColor"','stroke="#fff"')} Naqd
+          </button>
+          <button id="xBtnCard" onclick="xt('card')"
+            style="padding:12px;border-radius:14px;border:2px solid #EAEDF3;
+                   background:#fff;color:#8A93AD;font-size:14px;font-weight:700;
+                   cursor:pointer;font-family:${FONT};
+                   display:flex;align-items:center;justify-content:center;gap:8px;">
+            ${ICO.card} Karta
+          </button>
+        </div>
+      </div>
+
+      <!-- Izoh -->
+      <div class="ig"><label class="il">Izoh</label>
+        <input id="xn" class="inp" placeholder="Izoh..." style="font-family:${FONT};"/>
+      </div>
+
+      <!-- Saqlash -->
+      <button onclick="xSave()"
+        style="width:100%;padding:14px;border-radius:14px;border:none;background:#2D5BFF;
+               color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:${FONT};
+               display:flex;align-items:center;justify-content:center;gap:8px;
+               box-shadow:0 4px 12px rgba(45,91,255,.3);"
+        onmouseenter="this.style.background='#1A3FCE';"
+        onmouseleave="this.style.background='#2D5BFF';">
+        ${ICO.save} Saqlash
+      </button>`;
+
+    // ── Event handlers ───────────────────────────────────────────
+    window.xc = c => { cat = c; staffSelId = null; staffSearchQ = ''; draw(); };
+    window.xm = m => { sm = m; draw(); };
+    window.xco = t => { comm = t; draw(); };
+    window.xf = v => {
+      const e = document.getElementById('xfd');
+      if (e) { if (v) { e.style.display = 'block'; e.textContent = fmtSum(parseInt(v) || 0); } else e.style.display = 'none'; }
+    };
+    window.xt = t => {
+      pt = t;
+      const cb = document.getElementById('xBtnCash');
+      const cd = document.getElementById('xBtnCard');
+      if (cb) {
+        cb.style.background = t === 'cash' ? '#2D5BFF' : '#fff';
+        cb.style.color = t === 'cash' ? '#fff' : '#8A93AD';
+        cb.style.borderColor = t === 'cash' ? '#2D5BFF' : '#EAEDF3';
+      }
+      if (cd) {
+        cd.style.background = t === 'card' ? '#2D5BFF' : '#fff';
+        cd.style.color = t === 'card' ? '#fff' : '#8A93AD';
+        cd.style.borderColor = t === 'card' ? '#2D5BFF' : '#EAEDF3';
+      }
+    };
+
+    // Hodim qidirish
+    window.xStaffFilter = q => {
+      staffSearchQ = q;
+      const list = document.getElementById('xStaffList');
+      if (!list) return;
+      const f = filteredStaff();
+      list.style.display = q ? 'block' : 'none';
+      list.innerHTML = f.map(s => `
+        <div id="xst${s.id}" onclick="xStaffPick(${s.id}, '${s.firstName} ${s.lastName}')"
+             style="padding:11px 14px;cursor:pointer;font-size:14px;font-weight:600;
+                    color:#0B1437;border-bottom:1px solid #F2F4F8;font-family:${FONT};
+                    display:flex;align-items:center;gap:8px;"
+             onmouseenter="this.style.background='#F5F7FB'"
+             onmouseleave="this.style.background='#fff'">
+          <div style="width:32px;height:32px;border-radius:10px;background:#EAF0FF;
+                      display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${ICO.staff.replace('width="20" height="20"','width="16" height="16"').replace('stroke="currentColor"','stroke="#2D5BFF"')}
+          </div>
+          <div>
+            <div>${s.firstName} ${s.lastName}</div>
+            ${s.subject ? `<div style="font-size:11px;color:#8A93AD;">${s.subject}</div>` : ''}
+          </div>
+        </div>`).join('') || `<div style="padding:16px;text-align:center;color:#8A93AD;font-family:${FONT};">Topilmadi</div>`;
+    };
+
+    window.xStaffPick = (id, name) => {
+      staffSelId = id;
+      staffSearchQ = '';
+      const list = document.getElementById('xStaffList');
+      if (list) list.style.display = 'none';
+      const search = document.getElementById('xStaffSearch');
+      if (search) search.value = name;
+      const picked = document.getElementById('xStaffPicked');
+      if (picked) {
+        picked.style.display = 'flex';
+        picked.style.alignItems = 'center';
+        picked.style.gap = '10px';
+        picked.style.padding = '10px 12px';
+        picked.style.background = '#EAF0FF';
+        picked.style.borderRadius = '12px';
+        picked.style.marginTop = '6px';
+        picked.innerHTML = `
+          <div style="width:34px;height:34px;border-radius:10px;background:#fff;
+                      display:flex;align-items:center;justify-content:center;">
+            ${ICO.staff.replace('width="20" height="20"','width="16" height="16"').replace('stroke="currentColor"','stroke="#2D5BFF"')}
+          </div>
+          <span style="font-size:14px;font-weight:700;color:#2D5BFF;font-family:${FONT};flex:1;">${name}</span>
+          <button onclick="xStaffClear()" style="background:none;border:none;cursor:pointer;color:#8A93AD;font-size:16px;">×</button>`;
+      }
+    };
+
+    window.xStaffClear = () => {
+      staffSelId = null;
+      const search = document.getElementById('xStaffSearch');
+      if (search) search.value = '';
+      const picked = document.getElementById('xStaffPicked');
+      if (picked) picked.style.display = 'none';
+      const list = document.getElementById('xStaffList');
+      if (list) list.style.display = 'none';
+    };
+
+    window.xSave = async () => {
+      const a = document.getElementById('xa')?.value;
+      if (!a || parseInt(a) <= 0) return toast('Summani kiriting');
+      if (cat === 'staff' && !staffSelId) return toast('Hodimni tanlang');
+      const n = document.getElementById('xn')?.value || '';
+      try {
+        await P('/expenses', {
+          category: cat,
+          subcategory: cat === 'communal' ? comm : null,
+          staffId: cat === 'staff' ? staffSelId : null,
+          monthYear: cat !== 'other' ? sm : null,
+          amount: parseInt(a),
+          paymentType: pt,
+          note: n
+        });
+        toast('✓ Saqlandi');
+        staffSelId = null; staffSearchQ = '';
+        draw();
+        // Formni tozalash
+        setTimeout(() => {
+          const inp = document.getElementById('xa');
+          if (inp) inp.value = '';
+          const fd = document.getElementById('xfd');
+          if (fd) fd.style.display = 'none';
+          const xn = document.getElementById('xn');
+          if (xn) xn.value = '';
+        }, 0);
+      } catch(e) { toast('✗ ' + e.message); }
+    };
+  }
+
+  draw();
+}
+
+async function rDebtors(el) {
+  // Reception version - same as admin rDebtors
+  // (rDebtors funksiyasi admin-patch-module6.html dagi to'liq versiya bilan bir xil)
+
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  function getMonths() {
+    const now = new Date(); const res = [];
+    for (let i = -3; i <= 1; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      res.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    }
+    return res;
+  }
+
+  const months = getMonths();
+  let selMonth = (typeof nowMonth === 'function') ? nowMonth() : months[months.length - 2];
+  let lastData = [];
+
+  const ICO = {
+    alert: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    send: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+    sendAll: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+    ok: `<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    phone: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.84a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+    tag: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+    tg: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2.5L2 9.5l7 2m12.5-9-7.5 19-4.5-7.5m12-11.5L9 11.5m0 0v7l3-3"/></svg>`,
+  };
+
+  function fmtSum(n) {
+    if (n === null || n === undefined) return '—';
+    return Number(n).toLocaleString('ru-RU') + " so'm";
+  }
+
+  function drawMain() {
+    const monthHtml = months.map(m => `
+      <button class="mpb${m === selMonth ? ' on' : ''}" onclick="debtSelM('${m}')"
+        style="flex-shrink:0;padding:8px 16px;border-radius:22px;font-weight:700;font-family:${FONT};">
+        ${(typeof mLabel === 'function') ? mLabel(m) : m}
+      </button>`).join('');
+
+    el.innerHTML = `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:800;color:#8A93AD;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;font-family:${FONT};">Oy tanlang</div>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;">${monthHtml}</div>
+      </div>
+      <button onclick="debtSearch()"
+        style="width:100%;padding:13px;border-radius:14px;border:none;background:#2D5BFF;
+               color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:${FONT};
+               display:flex;align-items:center;justify-content:center;gap:8px;
+               box-shadow:0 4px 12px rgba(45,91,255,.3);margin-bottom:16px;">
+        ${ICO.alert.replace('stroke="currentColor"','stroke="#fff"')} Ko'rish
+      </button>
+      <div id="debtResult"></div>`;
+
+    window.debtSelM = m => {
+      selMonth = m;
+      document.querySelectorAll('.mpb').forEach(b => {
+        const bm = b.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        if (bm) {
+          b.classList.toggle('on', bm === m);
+          b.style.background = bm === m ? '#2D5BFF' : '#fff';
+          b.style.color = bm === m ? '#fff' : '#525B7A';
+          b.style.borderColor = bm === m ? '#2D5BFF' : '#EAEDF3';
+        }
+      });
+    };
+
+    window.debtSearch = async () => {
+      const res = document.getElementById('debtResult');
+      res.innerHTML = (typeof ldHtml === 'function') ? ldHtml() : '';
+      try {
+        const data = await G(`/debtors?monthYear=${selMonth}`);
+        lastData = data;
+        renderResults(data, res);
+      } catch(e) {
+        res.innerHTML = `<div style="text-align:center;padding:32px;color:#EF4444;font-family:${FONT};">Xatolik: ${e.message}</div>`;
+      }
+    };
+  }
+
+  function renderResults(data, res) {
+    const mLbl = (typeof mLabel === 'function') ? mLabel(selMonth) : selMonth;
+    if (!data.length) {
+      res.innerHTML = `
+        <div style="text-align:center;padding:48px 20px;font-family:${FONT};">
+          ${ICO.ok}
+          <div style="font-size:16px;font-weight:700;color:#10B981;margin-top:14px;">Qarzdorlar yo'q!</div>
+          <div style="font-size:13px;color:#8A93AD;margin-top:6px;">${mLbl} uchun hamma to'lov qilgan</div>
+        </div>`;
+      return;
+    }
+
+    const totalStudents = data.reduce((s, g) => s + g.students.length, 0);
+    const totalDebt = data.reduce((s, g) => s + (g.totalDebt || 0), 0);
+
+    let html = `
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <div style="flex:1;background:#FCEDEC;border-radius:14px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:#EF4444;font-family:${FONT};">${totalStudents}</div>
+          <div style="font-size:11px;color:#EF4444;font-weight:700;">Qarzdor</div>
+        </div>
+        <div style="flex:1;background:#FEF4E0;border-radius:14px;padding:12px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:#F59E0B;font-family:${FONT};">${data.length}</div>
+          <div style="font-size:11px;color:#F59E0B;font-weight:700;">Guruh</div>
+        </div>
+        ${totalDebt > 0 ? `
+        <div style="flex:1;background:#F0EAFE;border-radius:14px;padding:12px;text-align:center;">
+          <div style="font-size:13px;font-weight:800;color:#8056F5;font-family:${FONT};line-height:1.2;">${fmtSum(totalDebt)}</div>
+          <div style="font-size:11px;color:#8056F5;font-weight:700;">Jami qarz</div>
+        </div>` : ''}
+      </div>`;
+
+    data.forEach(g => {
+      const hasTelegram = g.students.filter(s => s.hasTelegram).length;
+      html += `
+        <div style="margin-bottom:18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#0B1437;font-family:${FONT};">${g.groupName}</div>
+              <div style="font-size:11px;color:#8A93AD;font-weight:700;">${g.subjectName} · ${g.students.length} ta</div>
+            </div>
+            ${g.totalDebt > 0 ? `<div style="background:#FCEDEC;border-radius:10px;padding:5px 10px;">
+              <div style="font-size:12px;font-weight:800;color:#EF4444;font-family:${FONT};">${fmtSum(g.totalDebt)}</div>
+            </div>` : ''}
+          </div>
+
+          <div style="background:#fff;border-radius:18px;border:1.5px solid #EAEDF3;overflow:hidden;margin-bottom:8px;">
+            ${g.students.map((s, i) => {
+              const rowBg = i % 2 === 0 ? '#fff' : '#FAFBFD';
+              const phone = s.phoneSelf || s.phoneFather || '';
+              let statusHtml = s.noPay
+                ? `<div style="font-size:10.5px;font-weight:700;color:#EF4444;background:#FCEDEC;padding:2px 7px;border-radius:7px;">To'lovsiz</div>`
+                : `<div style="font-size:10.5px;font-weight:700;color:#F59E0B;background:#FEF4E0;padding:2px 7px;border-radius:7px;">Qisman</div>`;
+              return `
+                <div style="display:flex;align-items:center;padding:11px 12px;border-bottom:1px solid #F2F4F8;background:${rowBg};">
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13.5px;font-weight:700;color:#0B1437;font-family:${FONT};display:flex;align-items:center;gap:5px;">
+                      ${s.firstName} ${s.lastName}
+                      ${s.hasTelegram ? `<span style="color:#2D5BFF;opacity:.7;">${ICO.tg}</span>` : ''}
+                    </div>
+                    ${phone ? `<div style="font-size:11px;color:#8A93AD;margin-top:1px;display:flex;align-items:center;gap:2px;">${ICO.phone} ${phone}</div>` : ''}
+                    ${s.targetAmount ? `
+                    <div style="font-size:10.5px;color:#8A93AD;margin-top:2px;display:flex;align-items:center;gap:2px;">
+                      ${ICO.tag} ${fmtSum(s.targetAmount)} · To'lagan: ${fmtSum(s.paidAmount)}
+                    </div>` : `<div style="font-size:10.5px;color:#EF4444;margin-top:2px;font-weight:600;">To'lagan: ${fmtSum(s.paidAmount)}</div>`}
+                    ${s.remainingAmount ? `<div style="font-size:11px;font-weight:800;color:#EF4444;">Qoldiq: ${fmtSum(s.remainingAmount)}</div>` : ''}
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;margin-left:8px;">
+                    ${statusHtml}
+                    ${s.hasTelegram ? `
+                    <button onclick="debtSendOne(${s.studentId},${g.groupId},'${selMonth}',${s.remainingAmount||0})"
+                      style="padding:4px 8px;border-radius:8px;border:1.5px solid #EAEDF3;background:#fff;
+                             font-size:10.5px;font-weight:700;cursor:pointer;color:#525B7A;
+                             font-family:${FONT};display:flex;align-items:center;gap:3px;"
+                      onmouseenter="this.style.background='#EAF0FF';this.style.borderColor='#2D5BFF';this.style.color='#2D5BFF';"
+                      onmouseleave="this.style.background='#fff';this.style.borderColor='#EAEDF3';this.style.color='#525B7A';">
+                      ${ICO.send} Xabar
+                    </button>` : ''}
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>
+
+          ${hasTelegram > 0 ? `
+          <button onclick="debtNotifyGroup(${g.groupId},'${g.groupName}',${hasTelegram})"
+            style="width:100%;padding:10px;border-radius:12px;border:1.5px solid #EAEDF3;
+                   background:#fff;font-size:12.5px;font-weight:700;cursor:pointer;
+                   color:#525B7A;font-family:${FONT};display:flex;align-items:center;
+                   justify-content:center;gap:6px;"
+            onmouseenter="this.style.background='#EAF0FF';this.style.borderColor='#2D5BFF';this.style.color='#2D5BFF';"
+            onmouseleave="this.style.background='#fff';this.style.borderColor='#EAEDF3';this.style.color='#525B7A';">
+            ${ICO.sendAll} Guruhga xabar (${hasTelegram} ta)
+          </button>` : `
+          <div style="text-align:center;font-size:11px;color:#B5BDD2;padding:6px;font-family:${FONT};">Botga ulangan o'quvchilar yo'q</div>`}
+        </div>`;
+    });
+
+    res.innerHTML = html;
+
+    window.debtSendOne = async (studentId, groupId, monthYear, remainingAmount) => {
+      const grp = lastData.find(g => g.groupId === groupId);
+      const stu = grp?.students.find(s => s.studentId === studentId);
+      if (!stu) return;
+      openModal('Xabar yuborish', `
+        <div style="background:#F8F9FC;border-radius:14px;padding:14px;margin-bottom:14px;border:1px solid #EAEDF3;font-family:${FONT};">
+          <div style="font-weight:700;color:#0B1437;margin-bottom:4px;">${stu.firstName} ${stu.lastName}</div>
+          <div style="font-size:12px;color:#8A93AD;">${grp.groupName} · ${(typeof mLabel === 'function') ? mLabel(monthYear) : monthYear}</div>
+        </div>
+        <button id="debtSendOneBtn" onclick="debtSendOneConfirm(${studentId},${groupId},'${monthYear}',${remainingAmount})"
+          style="width:100%;padding:14px;border-radius:14px;border:none;background:#2D5BFF;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:${FONT};display:flex;align-items:center;justify-content:center;gap:8px;">
+          ${ICO.send.replace('stroke="currentColor"','stroke="#fff"')} Xabar yuborish
+        </button>`);
+    };
+
+    window.debtSendOneConfirm = async (studentId, groupId, monthYear, remainingAmount) => {
+      const btn = document.getElementById('debtSendOneBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Yuborilmoqda...'; }
+      try {
+        await P('/notifications/debt', { studentId, groupId, monthYear, remainingAmount: remainingAmount || null });
+        closeModal(); toast('✓ Xabar yuborildi');
+      } catch(e) { toast('✗ ' + e.message); if (btn) { btn.disabled = false; } }
+    };
+
+    window.debtNotifyGroup = (groupId, groupName, hasTg) => {
+      openModal('Guruhga xabar', `
+        <div style="background:#F8F9FC;border-radius:14px;padding:14px;margin-bottom:14px;border:1px solid #EAEDF3;font-family:${FONT};">
+          <div style="font-weight:700;color:#0B1437;">${groupName}</div>
+          <div style="font-size:12px;color:#8A93AD;margin-top:3px;">${hasTg} ta o'quvchiga yuboriladi</div>
+        </div>
+        <button id="debtGroupBtn" onclick="debtNotifyGroupConfirm(${groupId})"
+          style="width:100%;padding:14px;border-radius:14px;border:none;background:#2D5BFF;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:${FONT};display:flex;align-items:center;justify-content:center;gap:8px;">
+          ${ICO.sendAll.replace('stroke="currentColor"','stroke="#fff"')} Hammaga xabar yuborish
+        </button>`);
+    };
+
+    window.debtNotifyGroupConfirm = async groupId => {
+      const btn = document.getElementById('debtGroupBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Yuborilmoqda...'; }
+      try {
+        const r = await P('/debtors/notify', { groupId, monthYear: selMonth });
+        closeModal();
+        toast(`✓ ${r.sent} ta xabar yuborildi${r.noTelegram ? ', ' + r.noTelegram + ' ta botga ulanmagan' : ''}`, 3500);
+      } catch(e) { toast('✗ ' + e.message); if (btn) { btn.disabled = false; } }
+    };
+  }
+
+  drawMain();
+}
+
+async function rEdit(el) {
+  const gs = await G('/groups');
+  el.innerHTML = `
+    <div class="tabs">
+      <button class="tab on" id="et1" onclick="eTab('students')">O'quvchilar</button>
+      <button class="tab" id="et2" onclick="eTab('groups')">Guruhlar</button>
+    </div>
+    <div id="editC"></div>`;
+  window.eTab = t => {
+    document.getElementById('et1').className = 'tab' + (t === 'students' ? ' on' : '');
+    document.getElementById('et2').className = 'tab' + (t === 'groups' ? ' on' : '');
+    if (t === 'students') editStudents(); else editGroups();
+  };
+  editStudents();
+
+  function editStudents() {
+    const ec = document.getElementById('editC');
+    ec.innerHTML = `<div class="st">GURUH TANLANG</div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        ${gs.map(g => `<div class="li" onclick="eOpenG(${g.id})">
+          <div style="flex:1;"><div style="font-weight:700;color:#0B1437;">${g.name}</div>
+          <div style="font-size:12px;color:#8A93AD;">${g.subject?.name}</div></div>${SVGI.chevron}
+        </div>`).join('')}
+      </div>`;
+    window.eOpenG = async gid => {
+      const sts = await G(`/groups/${gid}/students`);
+      ec.innerHTML = `
+        <button class="btn bs" style="width:auto;margin-bottom:12px;" onclick="editStudents()">${SVGI.back} Orqaga</button>
+        <div class="card" style="padding:0;overflow:hidden;">
+          ${sts.length === 0
+            ? `<div style="padding:20px;text-align:center;color:#8A93AD;">O'quvchilar yo'q</div>`
+            : sts.map(s => `<div class="li" onclick='eOpenSt(${JSON.stringify(s).replace(/"/g, "&quot;")},${gid})'>
+                <div style="flex:1;"><div style="font-weight:700;color:#0B1437;">${s.firstName} ${s.lastName}</div>
+                <div style="font-size:12px;color:#8A93AD;">${s.phoneSelf || s.phoneFather || '—'}</div></div>
+                ${SVGI.edit.replace('stroke="currentColor"', 'stroke="#2D5BFF"')}
+              </div>`).join('')}
+        </div>`;
+      window.eOpenSt = async (s, gid2) => {
+        if (typeof s === 'string') s = JSON.parse(s);
+        const allGs = await G('/groups');
+        openModal(`${s.firstName} ${s.lastName}`, `
+          <div class="ig"><label class="il">Ismi</label><input id="es_fn" class="inp" value="${s.firstName}"/></div>
+          <div class="ig"><label class="il">Familyasi</label><input id="es_ln" class="inp" value="${s.lastName}"/></div>
+          <div class="ig"><label class="il">O'zi</label><input id="es_ps" class="inp" value="${s.phoneSelf || ''}"/></div>
+          <div class="ig"><label class="il">Otasi</label><input id="es_pf" class="inp" value="${s.phoneFather || ''}"/></div>
+          <div class="ig"><label class="il">Onasi</label><input id="es_pm" class="inp" value="${s.phoneMother || ''}"/></div>
+          <button class="btn bp" style="margin-bottom:12px;" onclick="esSave(${s.id},${gid2})">${SVGI.save} Saqlash</button>
+          <div class="ig"><label class="il">Yangi guruhga qo'shish (uzmasdan)</label>
+            <select id="es_addg" class="inp">
+              <option value="">Guruh tanlang</option>
+              ${allGs.filter(g => g.id !== gid2).map(g => `<option value="${g.id}">${g.name} — ${g.subject?.name}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn bs" style="margin-bottom:12px;" onclick="esAddG(${s.id})">${SVGI.plus} Guruhga qo'shish</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn bs" style="flex:1;font-size:13px;" onclick="esDetach(${s.id},${gid2})">Guruhdan uzish</button>
+            <button class="btn bs" style="flex:1;font-size:13px;" onclick='esMove(${s.id},${gid2},${JSON.stringify(allGs).replace(/"/g, "&quot;")})'>Guruh almashtirish</button>
+          </div>`);
+        window.esSave = async (id, g) => {
+          try {
+            await U(`/students/${id}`, { firstName: document.getElementById('es_fn').value, lastName: document.getElementById('es_ln').value, phoneSelf: document.getElementById('es_ps').value, phoneFather: document.getElementById('es_pf').value, phoneMother: document.getElementById('es_pm').value });
+            closeModal(); toast('✓ Saqlandi'); eOpenG(g);
+          } catch(e) { toast('✗ ' + e.message); }
+        };
+        window.esAddG = async id => {
+          const newGid = document.getElementById('es_addg').value; if (!newGid) return toast('Guruh tanlang');
+          try { await P(`/students/${id}/groups`, { groupId: newGid }); closeModal(); toast('✓ Qo\'shildi'); eOpenG(gid2); } catch(e) { toast('✗ ' + e.message); }
+        };
+        window.esDetach = async (sid, g) => {
+          try { await D(`/students/${sid}/groups/${g}`); closeModal(); toast('Guruhdan uzildi'); eOpenG(g); } catch(e) { toast('✗ ' + e.message); }
+        };
+        window.esMove = (sid, g, allG2) => {
+          if (typeof allG2 === 'string') allG2 = JSON.parse(allG2);
+          openModal("Boshqa guruhga ko'chirish", `
+            <div class="card" style="padding:0;overflow:hidden;">
+              ${allG2.filter(x => x.id !== g).map(x => `<div class="li" onclick="doMove(${sid},${g},${x.id})">
+                <div style="flex:1;"><div style="font-weight:700;">${x.name}</div><div style="font-size:12px;color:#8A93AD;">${x.subject?.name}</div></div>
+              </div>`).join('')}
+            </div>`);
+          window.doMove = async (s, og, ng) => {
+            try { await U(`/students/${s}/groups/${og}/move`, { newGroupId: ng }); closeModal(); toast('✓ Ko\'chirildi'); eOpenG(og); } catch(e) { toast('✗ ' + e.message); }
+          };
+        };
+      };
+    };
+  }
+
+  function editGroups() {
+    const ec = document.getElementById('editC');
+    ec.innerHTML = `<div class="card" style="padding:0;overflow:hidden;">
+      ${gs.map(g => `<div class="li" onclick="eOpenGH(${g.id})">
+        <div class="lic" style="background:#E6F8F0;">${SVGI.groups.replace('stroke="currentColor"', 'stroke="#10B981"')}</div>
+        <div style="flex:1;"><div style="font-weight:700;color:#0B1437;">${g.name}</div>
+        <div style="font-size:12px;color:#8A93AD;">${g.subject?.name} · ${g.teacher?.firstName || ''} ${g.teacher?.lastName || ''}</div></div>
+        ${SVGI.chevron}
+      </div>`).join('')}
+    </div>`;
+    window.eOpenGH = async gid => {
+      const [hist, teachers] = await Promise.all([G(`/groups/${gid}/teacher-history`), G('/staff/teachers')]);
+      const g = gs.find(x => x.id === gid);
+      openModal(g?.name || 'Guruh',
+        '<div class="ig"><label class="il">Guruh nomi</label><input id="eg_name" class="inp" value="' + (g?.name || '') + '"/></div>' +
+        '<div class="st" style="margin-top:4px;">O\'QITUVCHI</div>' +
+        '<div class="ig"><select id="eg_t" class="inp"><option value="">O\'qituvchi o\'zgartirish</option>' +
+        teachers.map(t => '<option value="' + t.id + '">' + t.firstName + ' ' + t.lastName + (t.subject ? ' — ' + t.subject : '') + '</option>').join('') +
+        '</select></div>' +
+        '<button class="btn bp" style="margin-bottom:20px;" id="egSaveBtn">' + SVGI.save + ' Saqlash</button>' +
+        '<div class="st">O\'QITUVCHILAR TARIXI</div>' +
+        (hist.length === 0
+          ? '<div style="color:#8A93AD;font-size:14px;text-align:center;padding:12px;">Tarix yo\'q</div>'
+          : hist.map(h =>
+              '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F2F4F8;">' +
+              '<div><div style="font-weight:700;font-size:14px;">' + h.teacher.firstName + ' ' + h.teacher.lastName + '</div>' +
+              '<div style="font-size:12px;color:#8A93AD;">' + (h.teacher.subject || '') + '</div></div>' +
+              '<div style="text-align:right;font-size:12px;color:#8A93AD;">' +
+              '<div>' + new Date(h.startDate).toLocaleDateString('uz-UZ') + '</div>' +
+              '<div>' + (h.endDate ? new Date(h.endDate).toLocaleDateString('uz-UZ') : 'Hozir') + '</div></div></div>'
+            ).join(''))
+      );
+      document.getElementById('egSaveBtn')?.addEventListener('click', async () => {
+        const newName = document.getElementById('eg_name').value.trim();
+        const tid = document.getElementById('eg_t').value;
+        const body = {};
+        if (newName && newName !== g?.name) body.name = newName;
+        if (tid) body.teacherId = parseInt(tid);
+        if (!Object.keys(body).length) return toast('Hech narsa o\'zgarmadingiz');
+        try { await U('/groups/' + gid, body); closeModal(); toast('✓ Saqlandi'); editGroups(); }
+        catch(e) { toast('✗ ' + e.message); }
+      });
+    };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONVERSION
+// ═══════════════════════════════════════════════════════════════
+
+async function rConversion(el) {
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  const ICO = {
+    cashOut: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>`,
+    cardIn:  `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
+    arrow:   `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`,
+    save:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    swap:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>`,
+  };
+
+  let type = 'cash_to_card', from = '', to = '';
+
+  function fmtSum(n) { return n ? Number(n).toLocaleString('ru-RU') + " so'm" : ''; }
+
+  function draw() {
+    const isCTC = type === 'cash_to_card';
+
+    const tabStyle = (active) => `
+      flex:1;padding:11px 6px;border-radius:12px;
+      border:${active ? 'none' : '1.5px solid #EAEDF3'};
+      background:${active ? '#2D5BFF' : '#fff'};
+      color:${active ? '#fff' : '#525B7A'};
+      font-size:13px;font-weight:700;cursor:pointer;font-family:${FONT};
+      display:flex;align-items:center;justify-content:center;gap:7px;
+      ${active ? 'box-shadow:0 4px 10px rgba(45,91,255,.25);' : ''}`;
+
+    el.innerHTML = `
+      <!-- Tab tugmalar -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;">
+        <button style="${tabStyle(isCTC)}" onclick="cvt('cash_to_card')">
+          ${ICO.cashOut.replace('stroke="currentColor"',`stroke="${isCTC ? '#fff' : '#525B7A'}"`)
+            .replace('width="22" height="22"','width="18" height="18"')}
+          Naqd → Karta
+        </button>
+        <button style="${tabStyle(!isCTC)}" onclick="cvt('card_to_cash')">
+          ${ICO.cardIn.replace('stroke="currentColor"',`stroke="${!isCTC ? '#fff' : '#525B7A'}"`)
+            .replace('width="22" height="22"','width="18" height="18"')}
+          Karta → Naqd
+        </button>
+      </div>
+
+      <!-- Yuborildi -->
+      <div style="background:#F8F9FC;border-radius:18px;border:1.5px solid #EAEDF3;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:40px;height:40px;border-radius:12px;
+                      background:${isCTC ? '#E6F8F0' : '#EAF0FF'};
+                      display:flex;align-items:center;justify-content:center;">
+            ${(isCTC ? ICO.cashOut : ICO.cardIn).replace('stroke="currentColor"',`stroke="${isCTC ? '#10B981' : '#2D5BFF'}"`)}
+          </div>
+          <div style="font-size:12px;font-weight:800;color:#8A93AD;letter-spacing:.5px;text-transform:uppercase;font-family:${FONT};">
+            ${isCTC ? 'Naqd berildi' : 'Kartadan olindi'}
+          </div>
+        </div>
+        <input id="cv_f" type="number" class="inp"
+          style="font-size:24px;font-weight:800;border:none;padding:0;background:transparent;
+                 font-family:${FONT};"
+          placeholder="Summani kiriting" value="${from}"
+          oninput="cvfm('from',this.value)"/>
+        <div id="cv_ff" style="font-size:14px;color:#8A93AD;margin-top:4px;font-family:${FONT};
+                                ${from ? '' : 'display:none'}">${fmtSum(from)}</div>
+      </div>
+
+      <!-- Ok -->
+      <div style="text-align:center;margin-bottom:12px;">${ICO.arrow}</div>
+
+      <!-- Qabul qilindi -->
+      <div style="background:#EAF0FF;border-radius:18px;border:1.5px solid #2D5BFF;padding:16px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:40px;height:40px;border-radius:12px;
+                      background:${!isCTC ? '#E6F8F0' : '#fff'};
+                      display:flex;align-items:center;justify-content:center;">
+            ${(!isCTC ? ICO.cashOut : ICO.cardIn).replace('stroke="currentColor"',`stroke="${!isCTC ? '#10B981' : '#2D5BFF'}"`)}
+          </div>
+          <div style="font-size:12px;font-weight:800;color:#2D5BFF;letter-spacing:.5px;text-transform:uppercase;font-family:${FONT};">
+            ${isCTC ? 'Karta qabul' : 'Naqd olindi'}
+          </div>
+        </div>
+        <input id="cv_t" type="number" class="inp"
+          style="font-size:24px;font-weight:800;border:none;padding:0;background:transparent;
+                 color:#2D5BFF;font-family:${FONT};"
+          placeholder="Summani kiriting" value="${to}"
+          oninput="cvfm('to',this.value)"/>
+        <div id="cv_tf" style="font-size:14px;color:#2D5BFF;margin-top:4px;font-family:${FONT};
+                                ${to ? '' : 'display:none'}">${fmtSum(to)}</div>
+      </div>
+
+      <!-- Saqlash -->
+      <button onclick="cvSave()"
+        style="width:100%;padding:14px;border-radius:14px;border:none;background:#2D5BFF;
+               color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:${FONT};
+               display:flex;align-items:center;justify-content:center;gap:8px;
+               box-shadow:0 4px 12px rgba(45,91,255,.3);"
+        onmouseenter="this.style.background='#1A3FCE';"
+        onmouseleave="this.style.background='#2D5BFF';">
+        ${ICO.save} Saqlash
+      </button>`;
+
+    window.cvt = t => { type = t; draw(); };
+    window.cvfm = (side, v) => {
+      if (side === 'from') from = v; else to = v;
+      const e = document.getElementById(`cv_${side === 'from' ? 'ff' : 'tf'}`);
+      if (e) { if (v) { e.style.display = 'block'; e.textContent = fmtSum(v); } else e.style.display = 'none'; }
+    };
+    window.cvSave = async () => {
+      const f = document.getElementById('cv_f')?.value;
+      const t = document.getElementById('cv_t')?.value;
+      if (!f || !t) return toast('Ikkala summani kiriting');
+      try {
+        await P('/conversions', { type, fromAmount: parseInt(f), toAmount: parseInt(t) });
+        toast('✓ Saqlandi');
+        from = ''; to = '';
+        draw();
+      } catch(e) { toast('✗ ' + e.message); }
+    };
+  }
+
+  draw();
+}
+
+async function rArchive(el) {
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+  const ICO = {
+    groups:  `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    archive: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+    trash:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+    back:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`,
+    restore: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>`,
+    chevron: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
+    warning: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  };
+
+  let tab = 'active';
+
+  async function load() {
+    try {
+      const groups = await G('/groups');
+      const ag = groups.filter(g => g.status !== 'inactive');
+
+      if (tab === 'active') {
+        el.innerHTML = `
+          <div class="tabs">
+            <button class="tab on" id="tabAct">Faol o'quvchilar</button>
+            <button class="tab" id="tabArch">Arxiv</button>
+          </div>
+          <div class="st">GURUH TANLANG</div>
+          <div class="card" style="padding:0;overflow:hidden;" id="archGList"></div>`;
+
+        document.getElementById('archGList').innerHTML = ag.map(g =>
+          `<div class="li" id="ag${g.id}">
+            <div class="lic" style="background:#E6F8F0;">${ICO.groups}</div>
+            <div style="flex:1;"><div style="font-size:15px;font-weight:700;color:#0B1437;font-family:${FONT};">${g.name}</div>
+            <div style="font-size:12px;color:#8A93AD;font-family:${FONT};">${g.subject?.name || ''}</div></div>
+            ${ICO.chevron}
+          </div>`
+        ).join('');
+        ag.forEach(g => { document.getElementById('ag' + g.id)?.addEventListener('click', () => showGroup(g, ag)); });
+
+      } else {
+        // ── ARXiV TAB: Faqat bu yerda HARD DELETE tugmasi ─────────────
+        const all = await Promise.all(ag.map(g =>
+          G('/groups/' + g.id + '/students?status=archived').then(sts => ({ g, sts })).catch(() => ({ g, sts: [] }))
+        ));
+        const hasData = all.filter(x => x.sts.length > 0);
+
+        el.innerHTML = `
+          <div class="tabs">
+            <button class="tab" id="tabAct">Faol o'quvchilar</button>
+            <button class="tab on" id="tabArch">Arxiv</button>
+          </div>
+          <!-- Izoh -->
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:12px 14px;
+                      background:#FEF4E0;border-radius:12px;border:1px solid #FCD34D;
+                      margin-bottom:14px;font-family:${FONT};">
+            ${ICO.warning}
+            <div style="font-size:12px;color:#92400E;line-height:1.5;">
+              Bu sahifadagi o'quvchilarni butunlay o'chirish mumkin.
+              <b>O'chirish qaytarib bo'lmaydi</b> va barcha tarix, to'lovlar, davomat ma'lumotlari yo'qoladi.
+            </div>
+          </div>
+          ${hasData.length === 0
+            ? `<div style="text-align:center;padding:40px 20px;color:#8A93AD;font-family:${FONT};">Arxivda o'quvchilar yo'q</div>`
+            : hasData.map(({ g, sts }) => `
+              <div style="margin-bottom:14px;">
+                <div class="st">${g.name} — ${g.subject?.name || ''}</div>
+                <div class="card" style="padding:0;overflow:hidden;">
+                  ${sts.map(s => `
+                    <div class="li">
+                      <div style="flex:1;">
+                        <div style="font-size:15px;font-weight:700;color:#0B1437;font-family:${FONT};">${s.firstName} ${s.lastName}</div>
+                        <div style="font-size:12px;color:#8A93AD;font-family:${FONT};">${s.phoneSelf || s.phoneFather || '—'}</div>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+                        <!-- Qaytarish -->
+                        <button id="rest${s.id}x${g.id}"
+                          style="padding:5px 10px;border-radius:9px;border:1.5px solid #EAEDF3;
+                                 background:#fff;font-size:11px;font-weight:700;cursor:pointer;
+                                 color:#10B981;font-family:${FONT};display:flex;align-items:center;gap:4px;"
+                          onmouseenter="this.style.background='#E6F8F0';this.style.borderColor='#10B981';"
+                          onmouseleave="this.style.background='#fff';this.style.borderColor='#EAEDF3';">
+                          ${ICO.restore.replace('stroke="currentColor"','stroke="#10B981"')} Qaytarish
+                        </button>
+                        <!-- Butunlay O'chirish -->
+                        <button id="hardDel${s.id}"
+                          style="padding:5px 10px;border-radius:9px;border:1.5px solid #FECACA;
+                                 background:#FCEDEC;font-size:11px;font-weight:700;cursor:pointer;
+                                 color:#EF4444;font-family:${FONT};display:flex;align-items:center;gap:4px;">
+                          ${ICO.trash.replace('stroke="currentColor"','stroke="#EF4444"')} O'chirish
+                        </button>
+                      </div>
+                    </div>`).join('')}
+                </div>
+              </div>`).join('')}`;
+
+        // Event listeners
+        hasData.forEach(({ g, sts }) => {
+          sts.forEach(s => {
+            // Qaytarish
+            document.getElementById('rest' + s.id + 'x' + g.id)?.addEventListener('click', async () => {
+              try { await P('/students/' + s.id + '/groups', { groupId: g.id }); toast('✓ Qaytarildi'); load(); }
+              catch(e) { toast('✗ ' + e.message); }
+            });
+
+            // Butunlay o'chirish — tasdiqlash oynasi
+            document.getElementById('hardDel' + s.id)?.addEventListener('click', () => {
+              openModal("Butunlay o'chirish", `
+                <div style="font-size:14px;color:#525B7A;margin-bottom:16px;font-family:${FONT};line-height:1.6;">
+                  <b style="color:#0B1437;">${s.firstName} ${s.lastName}</b> ni tizimdan
+                  <b style="color:#EF4444;">butunlay o'chirishni</b> tasdiqlaysizmi?
+                </div>
+                <div style="background:#FCEDEC;border-radius:12px;padding:12px;margin-bottom:16px;
+                            border:1px solid #FECACA;font-size:12px;color:#DC2626;font-family:${FONT};
+                            display:flex;align-items:flex-start;gap:7px;">
+                  ${ICO.warning.replace('stroke="#92400E"','stroke="#DC2626"')}
+                  <div style="line-height:1.5;">
+                    Bu amal <b>qaytarib bo'lmaydi!</b> Barcha to'lovlar, davomat, narx tarixi
+                    va profil ma'lumotlari butunlay o'chib ketadi.
+                  </div>
+                </div>
+                <div style="display:flex;gap:10px;">
+                  <button onclick="closeModal()"
+                    style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #EAEDF3;
+                           background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:${FONT};">
+                    Bekor
+                  </button>
+                  <button id="confirmHardDel"
+                    style="flex:2;padding:12px;border-radius:12px;border:none;background:#EF4444;
+                           color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:${FONT};
+                           display:flex;align-items:center;justify-content:center;gap:7px;">
+                    ${ICO.trash.replace('stroke="currentColor"','stroke="#fff"')} Ha, butunlay o'chirish
+                  </button>
+                </div>`);
+
+              document.getElementById('confirmHardDel')?.addEventListener('click', async () => {
+                const btn = document.getElementById('confirmHardDel');
+                if (btn) { btn.disabled = true; btn.textContent = 'O\'chirilmoqda...'; }
+                try {
+                  await D('/students/' + s.id + '?action=hard_delete');
+                  closeModal();
+                  toast('O\'chirildi');
+                  load();
+                } catch(e) {
+                  toast('✗ ' + e.message);
+                  if (btn) { btn.disabled = false; btn.innerHTML = `${ICO.trash.replace('stroke="currentColor"','stroke="#fff"')} Ha, butunlay o'chirish`; }
+                }
+              });
+            });
+          });
+        });
+      }
+
+      document.getElementById('tabAct')?.addEventListener('click', () => { tab = 'active'; load(); });
+      document.getElementById('tabArch')?.addEventListener('click', () => { tab = 'archived'; load(); });
+
+    } catch(e) { el.innerHTML = emHtml ? emHtml('Xatolik: ' + e.message) : ''; }
+  }
+
+  async function showGroup(g, allGroups) {
+    const sts = await G('/groups/' + g.id + '/students');
+    const curMonth = (typeof nowMonth === 'function') ? nowMonth() : '';
+    const pays = await Promise.all(sts.map(s =>
+      G('/payments?studentId=' + s.id + '&monthYear=' + curMonth + '&groupId=' + g.id).catch(() => [])
+    ));
+
+    el.innerHTML = `
+      <button class="btn bs" style="width:auto;margin-bottom:12px;" id="archBk">
+        <span style="display:flex;align-items:center;gap:6px;">${ICO.back} Orqaga</span>
+      </button>
+      <div style="font-size:16px;font-weight:800;color:#0B1437;margin-bottom:4px;font-family:${FONT};">${g.name}</div>
+      <div style="font-size:13px;color:#8A93AD;margin-bottom:16px;font-family:${FONT};">${g.subject?.name || ''}</div>
+      ${sts.length === 0
+        ? `<div style="text-align:center;padding:24px;color:#8A93AD;font-family:${FONT};">O'quvchilar yo'q</div>`
+        : `<div class="card" style="padding:0;overflow:hidden;">
+            ${sts.map((s, i) => {
+              const paid = (pays[i] || []).reduce((sum, p) => sum + Number(p.amount), 0);
+              const paidStr = paid > 0
+                ? `<div style="font-size:12px;color:#10B981;margin-top:2px;font-family:${FONT};">${curMonth}: ${paid.toLocaleString('ru-RU')} so'm to'lov</div>`
+                : `<div style="font-size:12px;color:#EF4444;margin-top:2px;font-family:${FONT};">${curMonth}: to'lovsiz</div>`;
+              return `
+                <div class="li">
+                  <div style="flex:1;">
+                    <div style="font-size:15px;font-weight:700;color:#0B1437;font-family:${FONT};">${s.firstName} ${s.lastName}</div>
+                    <div style="font-size:12px;color:#8A93AD;font-family:${FONT};">${s.phoneSelf || s.phoneFather || '—'}</div>
+                    ${paidStr}
+                  </div>
+                  <button class="btn bd bsm" id="archd${s.id}"
+                    style="display:flex;align-items:center;gap:5px;">
+                    ${ICO.archive.replace('stroke="currentColor"','stroke="#EF4444"')} Arxivlash
+                  </button>
+                </div>`;
+            }).join('')}
+          </div>`}`;
+
+    document.getElementById('archBk')?.addEventListener('click', load);
+    sts.forEach(s => {
+      document.getElementById('archd' + s.id)?.addEventListener('click', async () => {
+        try {
+          await D('/students/' + s.id + '/groups/' + g.id);
+          toast('✓ Arxivga o\'kazildi');
+          showGroup(g, allGroups);
+        } catch(e) { toast('✗ ' + e.message); }
+      });
+    });
+  }
+
+  load();
+}
+
+// INIT
+// ═══════════════════════════════════════════════════════════════
+async function init() {
+  try {
+    const user = await G('/auth/me');
+    if (!['receptionist', 'admin'].includes(user.role)) {
+      throw new Error('Ruxsat yo\'q');
+    }
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    setupSidebar(user);
+    nav('applist');
+  } catch(e) {
+    const ld = document.getElementById('loading');
+    ld.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#F5F7FB;text-align:center;padding:40px;';
+    const msg = e.message === 'Ruxsat yo\'q'
+      ? 'Bu sahifaga kirish uchun qabulxona huquqi kerak'
+      : 'Botda /start bosib, CRM ni oching';
+    ld.innerHTML = `
+      <div style="width:72px;height:72px;border-radius:20px;background:#FCEDEC;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <b style="font-size:16px;color:#0B1437;">Tizimga kirish uchun</b>
+      <span style="font-size:14px;color:#8A93AD;margin-top:6px;">${msg}</span>`;
+  }
+}
+  }
+}
+
+init();
+</script>
+</body>
+</html>

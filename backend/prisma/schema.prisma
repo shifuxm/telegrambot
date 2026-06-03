@@ -1,0 +1,267 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  telegramId BigInt?  @unique @map("telegram_id")
+  role       Role     @default(receptionist)
+  firstName  String   @map("first_name")
+  lastName   String   @map("last_name")
+  phone      String?
+  username   String?
+  subject    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  taughtGroups     Group[]
+  expenses         Expense[]
+  teacherHistories GroupTeacherHistory[]
+
+  @@map("users")
+}
+
+enum Role {
+  admin
+  receptionist
+  teacher
+}
+
+model Subject {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  groups            Group[]
+  applicantSubjects ApplicantSubject[]
+  results           Result[]
+
+  @@map("subjects")
+}
+
+model Group {
+  id        Int         @id @default(autoincrement())
+  name      String
+  subjectId Int         @map("subject_id")
+  teacherId Int?        @map("teacher_id")
+  status    GroupStatus @default(active)
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  subject        Subject               @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher        User?                 @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  groupStudents  GroupStudent[]
+  schedules      Schedule[]
+  payments       Payment[]
+  teacherHistory GroupTeacherHistory[]
+
+  @@map("groups")
+}
+
+enum GroupStatus {
+  active
+  archived
+}
+
+model GroupTeacherHistory {
+  id        Int       @id @default(autoincrement())
+  groupId   Int       @map("group_id")
+  teacherId Int       @map("teacher_id")
+  startDate DateTime  @default(now()) @map("start_date")
+  endDate   DateTime? @map("end_date")
+
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher User  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@map("group_teacher_history")
+}
+
+model Applicant {
+  id            Int             @id @default(autoincrement())
+  firstName     String          @map("first_name")
+  lastName      String          @map("last_name")
+  educationType EducationType   @map("education_type")
+  grade         String?
+  phoneSelf     String?         @map("phone_self")
+  phoneFather   String?         @map("phone_father")
+  phoneMother   String?         @map("phone_mother")
+  telegramId    BigInt?         @unique @map("telegram_id")
+  status        ApplicantStatus @default(waiting)
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  applicantSubjects ApplicantSubject[]
+  student           Student?
+
+  @@map("applicants")
+}
+
+enum EducationType {
+  school
+  college
+  adult
+}
+
+enum ApplicantStatus {
+  waiting
+  enrolled
+}
+
+model ApplicantSubject {
+  id          Int @id @default(autoincrement())
+  applicantId Int @map("applicant_id")
+  subjectId   Int @map("subject_id")
+
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  subject   Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([applicantId, subjectId])
+  @@map("applicant_subjects")
+}
+
+model Student {
+  id          Int      @id @default(autoincrement())
+  applicantId Int      @unique @map("applicant_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  applicant     Applicant      @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  groupStudents GroupStudent[]
+  payments      Payment[]
+
+  @@map("students")
+}
+
+model GroupStudent {
+  id        Int                @id @default(autoincrement())
+  groupId   Int                @map("group_id")
+  studentId Int                @map("student_id")
+  status    GroupStudentStatus @default(active)
+  joinedAt  DateTime           @default(now()) @map("joined_at")
+
+  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+
+  @@unique([groupId, studentId])
+  @@map("group_students")
+}
+
+enum GroupStudentStatus {
+  active
+  archived
+}
+
+model Schedule {
+  id         Int      @id @default(autoincrement())
+  groupId    Int      @map("group_id")
+  lessonDate DateTime @map("lesson_date") @db.Date
+  startTime  String   @map("start_time")
+  endTime    String   @map("end_time")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+
+  @@unique([groupId, lessonDate])
+  @@map("schedules")
+}
+
+model Attendance {
+  id             Int      @id @default(autoincrement())
+  scheduleId     Int      @map("schedule_id")
+  groupStudentId Int      @map("group_student_id")
+  teacherId      Int?     @map("teacher_id")
+  isPresent      Boolean  @default(false) @map("is_present")
+  takenAt        DateTime @default(now()) @map("taken_at")
+
+  schedule     Schedule     @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  groupStudent GroupStudent @relation(fields: [groupStudentId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduleId, groupStudentId])
+  @@map("attendances")
+}
+
+model Payment {
+  id           Int         @id @default(autoincrement())
+  studentId    Int         @map("student_id")
+  groupId      Int         @map("group_id")
+  monthYear    String      @map("month_year")
+  amount       BigInt
+  targetAmount BigInt?     @map("target_amount")
+  isPartial    Boolean     @default(false) @map("is_partial")
+  paymentType  PaymentType @map("payment_type")
+  note         String?
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Expense {
+  id          Int             @id @default(autoincrement())
+  category    ExpenseCategory
+  subcategory String?
+  staffId     Int?            @map("staff_id")
+  monthYear   String?         @map("month_year")
+  amount      BigInt
+  paymentType PaymentType     @map("payment_type")
+  note        String?
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  staff User? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  @@map("expenses")
+}
+
+model Conversion {
+  id         Int            @id @default(autoincrement())
+  type       ConversionType
+  fromAmount BigInt         @map("from_amount")
+  toAmount   BigInt         @map("to_amount")
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  @@map("conversions")
+}
+
+model Result {
+  id          Int      @id @default(autoincrement())
+  subjectId   Int      @map("subject_id")
+  year        Int
+  studentName String   @map("student_name")
+  score       String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@map("results")
+}
+
+model Settings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+
+  @@map("settings")
+}
+
+enum PaymentType {
+  cash
+  card
+  balance_deduction
+}
+
+enum ExpenseCategory {
+  staff
+  communal
+  other
+}
+
+enum ConversionType {
+  cash_to_card
+  card_to_cash
+}
+
